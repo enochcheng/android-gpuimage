@@ -14,41 +14,53 @@
  * limitations under the License.
  */
 
+/* 
+ * Ported from iOS to Android by Hybridity
+ * 
+ */
+
 package jp.co.cyberagent.android.gpuimage;
 
 import android.opengl.GLES20;
+import android.util.Log;
 /**
  * Applies a polkadot effect to the image.
  */
 public class GPUImagePolkaDotFilter extends GPUImageFilter {
     public static final String POLKA_DOT_FRAGMENT_SHADER = "" +
-            "precision highp float;\n" +
 
-            "varying vec2 textureCoordinate;\n" +
-
-            "uniform float imageWidthFactor;\n" +
-            "uniform float imageHeightFactor;\n" +
-            "uniform sampler2D inputImageTexture;\n" +
-            "uniform float pixel;\n" +
-
-            "void main()\n" +
-            "{\n" +
-            "  vec2 uv  = textureCoordinate.xy;\n" +
-            "  float dx = pixel * imageWidthFactor;\n" +
-            "  float dy = pixel * imageHeightFactor;\n" +
-            "  vec2 coord = vec2(dx * floor(uv.x / dx), dy * floor(uv.y / dy));\n" +
-            "  vec3 tc = texture2D(inputImageTexture, coord).xyz;\n" +
-            "  gl_FragColor = vec4(tc, 1.0);\n" +
-            "}";
+    		"precision highp float;\n" +
+    		"varying highp vec2 textureCoordinate;\n" +
+		"uniform sampler2D inputImageTexture;\n" +
+	
+		"uniform highp float fractionalWidthOfPixel;\n" +
+		"uniform highp float aspectRatio;\n" +
+		"uniform highp float dotScaling;\n" +
+	
+		"void main()\n" +
+			"{\n" +
+			"highp vec2 sampleDivisor = vec2(fractionalWidthOfPixel, fractionalWidthOfPixel / aspectRatio);\n" +
+			"highp vec2 samplePos = textureCoordinate - mod(textureCoordinate, sampleDivisor) + 0.5 * sampleDivisor;\n" +
+			"highp vec2 textureCoordinateToUse = vec2(textureCoordinate.x, (textureCoordinate.y * aspectRatio + 0.5 - 0.5 * aspectRatio));\n" +
+			"highp vec2 adjustedSamplePos = vec2(samplePos.x, (samplePos.y * aspectRatio + 0.5 - 0.5 * aspectRatio));\n" +
+			"highp float distanceFromSamplePoint = distance(adjustedSamplePos, textureCoordinateToUse);\n" +
+			"lowp float checkForPresenceWithinDot = step(distanceFromSamplePoint, (fractionalWidthOfPixel * 0.5) * dotScaling);\n" +
+			"lowp vec4 inputColor = texture2D(inputImageTexture, samplePos);\n" +
+			"gl_FragColor = vec4(inputColor.rgb * checkForPresenceWithinDot, inputColor.a);\n" +
+	    "}";
 
     private int mImageWidthFactorLocation;
     private int mImageHeightFactorLocation;
-    private float mPixel;
-    private int mPixelLocation;
+    private float mDot;
+    private int mPolkaLocation;
+    private int fractionalWidthOfAPixelLocation;
+    private float fractionalWidthOfAPixel;
+    private int aspectRatioLocation;
+    private float aspectRatio;
     
     public GPUImagePolkaDotFilter() {
         super(NO_FILTER_VERTEX_SHADER, POLKA_DOT_FRAGMENT_SHADER);
-        mPixel = 1.0f;
+        mDot = 1.0f;
     }
 
     @Override
@@ -56,8 +68,14 @@ public class GPUImagePolkaDotFilter extends GPUImageFilter {
         super.onInit();
         mImageWidthFactorLocation = GLES20.glGetUniformLocation(getProgram(), "imageWidthFactor");
         mImageHeightFactorLocation = GLES20.glGetUniformLocation(getProgram(), "imageHeightFactor");
-        mPixelLocation = GLES20.glGetUniformLocation(getProgram(), "pixel");
-        setPixel(mPixel);
+        mPolkaLocation = GLES20.glGetUniformLocation(getProgram(), "dotScaling");
+        fractionalWidthOfAPixelLocation = GLES20.glGetUniformLocation(getProgram(), "fractionalWidthOfPixel");
+        aspectRatioLocation = GLES20.glGetUniformLocation(getProgram(), "aspectRatio");
+
+        setFloat(fractionalWidthOfAPixelLocation, 0.05f);        
+        setFloat(aspectRatioLocation, 1.0f);
+        
+        setDotScaling(mDot);
     }
 
     @Override
@@ -67,8 +85,13 @@ public class GPUImagePolkaDotFilter extends GPUImageFilter {
         setFloat(mImageHeightFactorLocation, 1.0f / height);
     }
 
-    public void setPixel(final float pixel) {
-      mPixel = pixel;
-      setFloat(mPixelLocation, mPixel);
+    public void setDotScaling(final float pixel) {
+    	
+    		mDot = pixel;
+        Log.v("GENERATE", "POLKA SLIDER is " + pixel);
+
+        setFloat(fractionalWidthOfAPixelLocation, mDot);        
+        //setFloat(aspectRatioLocation, 1.0f);
+    		setFloat(mPolkaLocation, mDot);
     }
 }
