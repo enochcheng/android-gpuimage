@@ -18,10 +18,10 @@ package jp.co.cyberagent.android.gpuimage;
 
 import android.opengl.GLES20;
 /**
- * Applies a grayscale effect to the image.
+ * Applies a polkadot effect to the image.
  */
-public class GPUImagePixelationFilter extends GPUImageFilter {
-    public static final String PIXELATION_FRAGMENT_SHADER = "" +
+public class GPUImagePolkaDotFilter extends GPUImageFilter {
+    public static final String POLKA_DOT_FRAGMENT_SHADER = "" +
             "precision highp float;\n" +
 
             "varying vec2 textureCoordinate;\n" +
@@ -46,8 +46,8 @@ public class GPUImagePixelationFilter extends GPUImageFilter {
     private float mPixel;
     private int mPixelLocation;
     
-    public GPUImagePixelationFilter() {
-        super(NO_FILTER_VERTEX_SHADER, PIXELATION_FRAGMENT_SHADER);
+    public GPUImagePolkaDotFilter() {
+        super(NO_FILTER_VERTEX_SHADER, POLKA_DOT_FRAGMENT_SHADER);
         mPixel = 1.0f;
     }
 
