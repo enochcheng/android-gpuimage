@@ -382,6 +382,7 @@ public class GPUImage {
             WindowManager windowManager = (WindowManager) mContext.getSystemService(Context.WINDOW_SERVICE);
             Display display = windowManager.getDefaultDisplay();
             return display.getWidth();
+            //return display.getSize(Point pt);
         }
     }
 
