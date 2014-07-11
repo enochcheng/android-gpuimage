@@ -17,6 +17,7 @@
 package jp.co.cyberagent.android.gpuimage;
 
 import android.opengl.GLES20;
+import android.util.Log;
 /**
  * Applies a grayscale effect to the image.
  */
@@ -69,6 +70,8 @@ public class GPUImagePixelationFilter extends GPUImageFilter {
 
     public void setPixel(final float pixel) {
       mPixel = pixel;
+      Log.v("GENERATE", "PIXEL SLIDER is " + pixel);
+
       setFloat(mPixelLocation, mPixel);
     }
 }
