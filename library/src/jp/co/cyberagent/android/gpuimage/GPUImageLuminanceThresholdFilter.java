@@ -18,7 +18,7 @@ package jp.co.cyberagent.android.gpuimage;
 
 import android.opengl.GLES20;
 
-public class GPUImageLuminanceThresholdFilter extends GPUImageTwoInputFilter {
+public class GPUImageLuminanceThresholdFilter extends GPUImageFilter {
     public static final String LUMINOSITY_THRESHOLD_FRAGMENT_SHADER = "" + 
 
     		   " varying highp vec2 textureCoordinate;\n" +
@@ -41,7 +41,7 @@ public class GPUImageLuminanceThresholdFilter extends GPUImageTwoInputFilter {
     private int mBrightnessLocation;
     
     public GPUImageLuminanceThresholdFilter() {
-        super(LUMINOSITY_THRESHOLD_FRAGMENT_SHADER);
+        super(NO_FILTER_VERTEX_SHADER, LUMINOSITY_THRESHOLD_FRAGMENT_SHADER);
     }
     
     @Override
