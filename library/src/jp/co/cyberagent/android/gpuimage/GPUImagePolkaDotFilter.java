@@ -51,54 +51,47 @@ public class GPUImagePolkaDotFilter extends GPUImageFilter {
 
     private int mImageWidthFactorLocation;
     private int mImageHeightFactorLocation;
-    private float w, h;
-    private float mDot;
     private int mPolkaLocation;
     private int fractionalWidthOfAPixelLocation;
-    private float fractionalWidthOfAPixel;
     private int aspectRatioLocation;
-    private float aspectRatio;
+    private float mDot;
     
     public GPUImagePolkaDotFilter() {
         super(NO_FILTER_VERTEX_SHADER, POLKA_DOT_FRAGMENT_SHADER);
-        mDot = 0.90f;
+        mDot = 1.0f;
     }
 
     @Override
     public void onInit() {
         super.onInit();
 
+        // Get Uniforms
         fractionalWidthOfAPixelLocation = GLES20.glGetUniformLocation(getProgram(), "fractionalWidthOfPixel");
         aspectRatioLocation = GLES20.glGetUniformLocation(getProgram(), "aspectRatio");
         mPolkaLocation = GLES20.glGetUniformLocation(getProgram(), "dotScaling");
         mImageWidthFactorLocation = GLES20.glGetUniformLocation(getProgram(), "imageWidthFactor");
         mImageHeightFactorLocation = GLES20.glGetUniformLocation(getProgram(), "imageHeightFactor");
         
-        setFloat(fractionalWidthOfAPixelLocation, 0.05f);        
-        setFloat(aspectRatioLocation, 1.0f);
-        
+        setFloat(fractionalWidthOfAPixelLocation, 0.05f);                
         setDotScaling(mDot);
     }
 
     @Override
     public void onOutputSizeChanged(final int width, final int height) {
         super.onOutputSizeChanged(width, height);
-        w = 1.0f / width;
-        h = 1.0f / height;
-        setFloat(mImageWidthFactorLocation, 0.0f);
-        setFloat(mImageHeightFactorLocation, 0.0f);
-        //setFloat(fractionalWidthOfAPixelLocation, 0.05f);        
-        //setFloat(aspectRatioLocation, (1.0f / width) /  (1.0f / height) );
-        Log.v("GENERATE", "POLKA W is " + w + " and H is " + h);
+        setFloat(mImageWidthFactorLocation, 1.0f / width);
+        setFloat(mImageHeightFactorLocation, 1.0f / height);
+        //setFloat(aspectRatioLocation, width / height);
+        setFloat(aspectRatioLocation, 1.0f);
     }
 
     public void setDotScaling(final float pixel) {
-    		mDot = pixel;
-        //Log.v("GENERATE", "POLKA SLIDER is " + pixel);
-    		Log.v("GENERATE", " and noooww  POLKA W is " + w + " and H is " + h);
-        setFloat(fractionalWidthOfAPixelLocation, 0.05f);        
-        setFloat(mImageWidthFactorLocation, 0.0f);
-        setFloat(mImageHeightFactorLocation, 0.0f);
+    		mDot = (float) pixel;
+        //Log.v("GENERATE", "POLKA SLIDER is " + mDot);
+//        setFloat(fractionalWidthOfAPixelLocation, 0.05f);        
+//        setFloat(aspectRatioLocation, 1.0f);    
+//        setFloat(mImageWidthFactorLocation, 0.0f);
+//        setFloat(mImageHeightFactorLocation, 0.0f);
     		setFloat(mPolkaLocation, mDot);
     }
 }
