@@ -20,23 +20,24 @@ package jp.co.cyberagent.android.gpuimage;
  * Applies sobel edge detection on the image.
  */
 public class GPUImageSobelEdgeDetectionFilter extends GPUImageFilterGroup {
-    public static final String SOBEL_EDGE_DETECTION = "" +
+    public static final String SOBEL_EDGE_DETECTION_FRAGMENT_SHADER = "" +
+
             "precision mediump float;\n" + 
-            "\n" + 
+
             "varying vec2 textureCoordinate;\n" + 
             "varying vec2 leftTextureCoordinate;\n" + 
             "varying vec2 rightTextureCoordinate;\n" + 
-            "\n" + 
+
             "varying vec2 topTextureCoordinate;\n" + 
             "varying vec2 topLeftTextureCoordinate;\n" + 
             "varying vec2 topRightTextureCoordinate;\n" + 
-            "\n" + 
+
             "varying vec2 bottomTextureCoordinate;\n" + 
             "varying vec2 bottomLeftTextureCoordinate;\n" + 
             "varying vec2 bottomRightTextureCoordinate;\n" + 
-            "\n" + 
+
             "uniform sampler2D inputImageTexture;\n" + 
-            "\n" + 
+
             "void main()\n" + 
             "{\n" + 
             "    float bottomLeftIntensity = texture2D(inputImageTexture, bottomLeftTextureCoordinate).r;\n" + 
@@ -49,16 +50,16 @@ public class GPUImageSobelEdgeDetectionFilter extends GPUImageFilterGroup {
             "    float topIntensity = texture2D(inputImageTexture, topTextureCoordinate).r;\n" + 
             "    float h = -topLeftIntensity - 2.0 * topIntensity - topRightIntensity + bottomLeftIntensity + 2.0 * bottomIntensity + bottomRightIntensity;\n" + 
             "    float v = -bottomLeftIntensity - 2.0 * leftIntensity - topLeftIntensity + bottomRightIntensity + 2.0 * rightIntensity + topRightIntensity;\n" + 
-            "\n" + 
+
             "    float mag = length(vec2(h, v));\n" + 
-            "\n" + 
+
             "    gl_FragColor = vec4(vec3(mag), 1.0);\n" + 
             "}";
 
     public GPUImageSobelEdgeDetectionFilter() {
         super();
         addFilter(new GPUImageGrayscaleFilter());
-        addFilter(new GPUImage3x3TextureSamplingFilter(SOBEL_EDGE_DETECTION));
+        addFilter(new GPUImage3x3TextureSamplingFilter(SOBEL_EDGE_DETECTION_FRAGMENT_SHADER));
     }
 
     public void setLineSize(final float size) {
