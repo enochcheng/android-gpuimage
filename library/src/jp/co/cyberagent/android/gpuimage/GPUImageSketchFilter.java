@@ -64,4 +64,8 @@ public class GPUImageSketchFilter extends GPUImageFilterGroup {
         addFilter(new GPUImageGrayscaleFilter());
         addFilter(new GPUImage3x3TextureSamplingFilter(SKETCH_FRAGMENT_SHADER));
     }
+    
+    /*
+     * TODO SET EDGE STRENGTH
+     */
 }
