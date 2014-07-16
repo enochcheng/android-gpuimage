@@ -51,9 +51,9 @@ public class GPUImageHalftoneFilter extends GPUImageFilter {
             "}";
 
 
-    private int mDotLocation;
-    private int fractionalWidthOfAPixelLocation;
-    private int aspectRatioLocation;
+    private int dotScalingUniform;
+    private int fractionalWidthOfAPixelUniform;
+    private int aspectRatioUniform;
     
     public GPUImageHalftoneFilter() {
         super(NO_FILTER_VERTEX_SHADER, HALFTONE_FRAGMENT_SHADER);
@@ -63,16 +63,25 @@ public class GPUImageHalftoneFilter extends GPUImageFilter {
     public void onInit() {
         super.onInit();
 
-        fractionalWidthOfAPixelLocation = GLES20.glGetUniformLocation(getProgram(), "fractionalWidthOfPixel");
-        aspectRatioLocation = GLES20.glGetUniformLocation(getProgram(), "aspectRatio");
-        mDotLocation = GLES20.glGetUniformLocation(getProgram(), "dotScaling");
+        fractionalWidthOfAPixelUniform = GLES20.glGetUniformLocation(getProgram(), "fractionalWidthOfPixel");
+        aspectRatioUniform = GLES20.glGetUniformLocation(getProgram(), "aspectRatio");
+        dotScalingUniform = GLES20.glGetUniformLocation(getProgram(), "dotScaling");
         
-        setFloat(fractionalWidthOfAPixelLocation, 0.01f);              
-        setFloat(aspectRatioLocation, 1.0f);
-        setDotScaling(1.0f);
+        setFractionalWidthOfAPixel(0.01f);              
+        setAspectRatio(1.0f);
+        setDotScaling(0.01f);
     }
 
     public void setDotScaling(final float dot) {
-    		setFloat(mDotLocation, dot);
+    		setFloat(dotScalingUniform, dot);
     }
+    
+    public void setAspectRatio(final float ratio) {
+		setFloat(aspectRatioUniform, ratio);
+    }
+
+	public void setFractionalWidthOfAPixel(final float fraction) {
+			setFloat(fractionalWidthOfAPixelUniform, fraction); 
+	}
+    
 }

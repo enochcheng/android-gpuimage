@@ -69,9 +69,9 @@ public class GPUImagePolkaDotFilter extends GPUImageFilter {
         fractionalWidthOfAPixelUniform = GLES20.glGetUniformLocation(getProgram(), "fractionalWidthOfPixel");
         aspectRatioUniform = GLES20.glGetUniformLocation(getProgram(), "aspectRatio");
         
-        setDotScaling(0.1f);
+        setFractionalWidthOfAPixel(0.01f);              
         setAspectRatio(1.0f);
-        //setFractionalWidthOfAPixel(0.1f);     
+        setDotScaling(0.01f);  
     }
 
     public void setDotScaling(final float scale) {
