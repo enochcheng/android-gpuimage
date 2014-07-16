@@ -102,7 +102,7 @@ public class GPUImageFilter {
     public void onDraw(final int textureId, final FloatBuffer cubeBuffer,
                        final FloatBuffer textureBuffer) {
         GLES20.glUseProgram(mGLProgId);
-        runPendingOnDrawTasks();
+        runPendingOnDrawTasks(); // LinkedList Error
         if (!mIsInitialized) {
             return;
         }
@@ -130,7 +130,7 @@ public class GPUImageFilter {
 
     protected void runPendingOnDrawTasks() {
         while (!mRunOnDraw.isEmpty()) {
-            mRunOnDraw.removeFirst().run();
+            mRunOnDraw.removeFirst().run(); // CRASHY CRASHY
         }
     }
 
