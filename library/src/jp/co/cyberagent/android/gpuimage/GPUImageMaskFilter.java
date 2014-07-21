@@ -19,25 +19,61 @@
  */
 package jp.co.cyberagent.android.gpuimage;
 
+import android.opengl.GLES20;
+
 public class GPUImageMaskFilter extends GPUImageTwoInputFilter {
 	public static final String MASK_FRAGMENT_SHADER = "" + 
-			" varying highp vec2 textureCoordinate;\n" +
-    			" varying highp vec2 textureCoordinate2;\n" +
-            "\n" +
-            " uniform sampler2D inputImageTexture;\n" +
-            " uniform sampler2D inputImageTexture2;\n" +
-            "\n" +
+
+		 " varying highp vec2 textureCoordinate; \n" +
+		 " varying highp vec2 textureCoordinate2; \n" +
+		 " varying highp vec2 textureCoordinate3; \n" +
+		 
+		 " uniform sampler2D inputImageTexture; \n" +
+		 " uniform sampler2D inputImageTexture2; \n" +
+		 " uniform sampler2D inputImageTexture3; \n" +
+		 
+		" uniform highp float time; \n" +
+		" uniform highp float threshold; \n" +
+            
+            
             " void main()\n" +
             " {\n" +
-            "   lowp vec4 textureColor = texture2D(inputImageTexture, textureCoordinate);\n" +
-            "   lowp vec4 textureColor2 = texture2D(inputImageTexture2, textureCoordinate2);\n" +
-            "\n" +
-            "   lowp float newAlpha = dot(textureColor2.rgb, vec3(.33333334, .33333334, .33333334)) * textureColor2.a;" +
-            "\n" +
-            "   gl_FragColor = vec4(textureColor.xyz, newAlpha);" +
+			     " highp vec4 colour2 = texture2D(inputImageTexture, textureCoordinate); \n" +
+			     " highp vec4 colour1 = texture2D(inputImageTexture2, textureCoordinate); \n" +
+			     " highp vec4 colour0 = texture2D(inputImageTexture3, textureCoordinate); \n" +
+			     
+			     " highp vec3 q = vec3(textureCoordinate, time); \n" +
+			
+			     " if((colour0.r+colour0.g+colour0.b)/3.0 < threshold) { \n" +
+			         " gl_FragColor = colour1; \n" +
+			     " } \n" +
+			     " else { \n" +
+			         " gl_FragColor = colour2; \n" +
+			     " } \n" +            
             " }";
 
+	private int timeUniform;
+	private int thresholdUniform;
+	
     public GPUImageMaskFilter() {
         super(MASK_FRAGMENT_SHADER);
     }
+    
+    @Override
+    public void onInit() {
+        super.onInit();
+
+        timeUniform = GLES20.glGetUniformLocation(getProgram(), "time");
+        thresholdUniform = GLES20.glGetUniformLocation(getProgram(), "threshold");
+
+    }
+    
+    public void setTime(float newTime) {
+    		setFloat(timeUniform, newTime);
+    }
+    
+    public void setThreshold(float newThreshold) {
+    		setFloat(thresholdUniform, newThreshold);
+    }
+    
 }
