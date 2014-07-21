@@ -16,10 +16,12 @@
 
 package jp.co.cyberagent.android.gpuimage;
 
+import android.opengl.GLES20;
+
 /**
  * Applies sobel edge detection on the image.
  */
-public class GPUImageXYDerivativeFilter extends GPUImageSobelEdgeDetectionFilter {
+public class GPUImageXYDerivativeFilter extends GPUImageFilterGroup {
     public static final String XY_FRAGMENT_SHADER = "" +
     		" precision highp float;\n" + 
     
@@ -60,13 +62,28 @@ public class GPUImageXYDerivativeFilter extends GPUImageSobelEdgeDetectionFilter
             
             "}";
 
+    public int edgeStrengthUniform;
+    
     public GPUImageXYDerivativeFilter() {
         super();
         addFilter(new GPUImageGrayscaleFilter());
         addFilter(new GPUImage3x3TextureSamplingFilter(XY_FRAGMENT_SHADER));
     }
+    
+    @Override
+    public void onInit() {
+        super.onInit();
+        edgeStrengthUniform = GLES20.glGetUniformLocation(getProgram(), "edgeStrength");
+        setEdgeStrength(1.0f);
+    }
 
     public void setLineSize(final float size) {
         ((GPUImage3x3TextureSamplingFilter) getFilters().get(1)).setLineSize(size);
     }
+    
+    public void setEdgeStrength(final float strength) {
+        setFloat(edgeStrengthUniform, strength);
+    }
+    
+    
 }

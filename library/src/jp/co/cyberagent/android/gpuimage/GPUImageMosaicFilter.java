@@ -16,9 +16,13 @@
 
 package jp.co.cyberagent.android.gpuimage;
 
-import android.R;
+
+import java.nio.ByteBuffer;
+import java.nio.ByteOrder;
+import java.nio.FloatBuffer;
+
 import android.opengl.GLES20;
-import android.widget.ImageView;
+import android.util.Log;
 
 /*
  *  Mosaic Filter... hope i got the ranges right!
@@ -88,7 +92,7 @@ public class GPUImageMosaicFilter extends GPUImageTwoInputFilter {
         setInputTileSize(0.125f);
         setDisplayTileSize(0.025f);
         setNumTiles(64.0f);
-        setTileSet();
+        //setTileSet();
         setColorOn();
 
     }
@@ -99,8 +103,19 @@ public class GPUImageMosaicFilter extends GPUImageTwoInputFilter {
     }
     
     public void setDisplayTileSize(final float displayTileSize) {
-    		setFloat(displayTileSizeUniform, displayTileSize);
-    		GLES20.glUniform2f(displayTileSizeUniform, displayTileSize, displayTileSize);
+    		//setFloat(displayTileSizeUniform, displayTileSize);
+    		//GLES20.glUniform2f(displayTileSizeUniform, displayTileSize, displayTileSize);
+    		
+    		float[] vertices = {displayTileSize, displayTileSize};
+    		Log.v("GENERATE", "size is " + vertices.length);
+		final ByteBuffer bb = ByteBuffer.allocateDirect(2).order(ByteOrder.nativeOrder());
+		FloatBuffer fb = bb.asFloatBuffer();
+		fb.position(0); 
+		fb.put(vertices); 
+		fb.put(vertices); 
+		fb.flip();
+    	
+    		GLES20.glUniform2fv(displayTileSizeUniform, 1, fb);
     }
     
     public void setNumTiles(final float numTiles) {
@@ -108,7 +123,7 @@ public class GPUImageMosaicFilter extends GPUImageTwoInputFilter {
     }
     
     public void setTileSet() {
-    		//ImageView img = (ImageView) findResourceById(R.drawable.squares);
+    		// pushed into GPUImageFilterTools as the Bitmap
     }
     
     public void setColorOn() {

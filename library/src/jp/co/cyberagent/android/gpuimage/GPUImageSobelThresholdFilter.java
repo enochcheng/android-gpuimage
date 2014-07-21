@@ -2,8 +2,7 @@ package jp.co.cyberagent.android.gpuimage;
 
 import android.opengl.GLES20;
 
-public class GPUImageSobelThresholdFilter extends
-		GPUImage3x3TextureSamplingFilter {
+public class GPUImageSobelThresholdFilter extends GPUImage3x3TextureSamplingFilter {
     public static final String SOBEL_THRESHOLD_EDGE_DETECTION = "" +
     		"precision mediump float;\n" +
     		"\n" +
