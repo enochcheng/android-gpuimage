@@ -65,7 +65,7 @@ public class GPUImageChromAbbFilter extends GPUImageFilter {
         XoffsetUniform = GLES20.glGetUniformLocation(getProgram(), "XoffsetValue");
         YoffsetUniform = GLES20.glGetUniformLocation(getProgram(), "YoffsetValue");
 
-        setXoffset(0.05f);
+        setXoffset(0.0f);
         setYoffset(0.05f);
     }
 

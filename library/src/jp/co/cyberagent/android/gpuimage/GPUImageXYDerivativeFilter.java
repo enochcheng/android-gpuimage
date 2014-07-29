@@ -85,5 +85,4 @@ public class GPUImageXYDerivativeFilter extends GPUImageFilterGroup {
         setFloat(edgeStrengthUniform, strength);
     }
     
-    
 }

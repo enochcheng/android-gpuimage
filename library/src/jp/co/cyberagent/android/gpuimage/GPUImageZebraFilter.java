@@ -61,7 +61,7 @@ public class GPUImageZebraFilter extends GPUImageFilter {
         fractionalWidthOfAPixelUniform = GLES20.glGetUniformLocation(getProgram(), "fractionalWidthOfPixel");
         aspectRatioUniform = GLES20.glGetUniformLocation(getProgram(), "aspectRatio");
 
-        setFractionalWidthOfAPixel(0.01f);
+        //setFractionalWidthOfAPixel(0.01f);
         setAspectRatio(1.0f);
     }
 

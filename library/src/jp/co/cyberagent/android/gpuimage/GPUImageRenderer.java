@@ -307,8 +307,7 @@ public class GPUImageRenderer implements Renderer, PreviewCallback {
         adjustImageScaling();
     }
 
-    public void setRotation(final Rotation rotation,
-                            final boolean flipHorizontal, final boolean flipVertical) {
+    public void setRotation(final Rotation rotation, final boolean flipHorizontal, final boolean flipVertical) {
         mFlipHorizontal = flipHorizontal;
         mFlipVertical = flipVertical;
         setRotation(rotation);

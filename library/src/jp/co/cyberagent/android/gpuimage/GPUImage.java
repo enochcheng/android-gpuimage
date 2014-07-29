@@ -41,7 +41,6 @@ import android.view.WindowManager;
 import java.io.*;
 import java.net.URL;
 import java.util.List;
-import java.util.concurrent.Semaphore;
 
 /**
  * The main accessor for GPUImage functionality. This class helps to do common
@@ -204,28 +203,6 @@ public class GPUImage {
     public void deleteImage() {
         mRenderer.deleteImage();
         mCurrentBitmap = null;
-        requestRender();
-    }
-    
-    /**
-     * Rotates the current image.
-     */
-    public void rotateImage(final int degrees) {
-        switch (degrees) {
-	        case 0:
-	        	mRenderer.setRotation(Rotation.NORMAL, mRenderer.isFlippedHorizontally(), mRenderer.isFlippedVertically());
-	        case 1:
-	        	mRenderer.setRotation(Rotation.ROTATION_90, mRenderer.isFlippedHorizontally(), mRenderer.isFlippedVertically());
-	        case 2:
-	        	mRenderer.setRotation(Rotation.ROTATION_180, mRenderer.isFlippedHorizontally(), mRenderer.isFlippedVertically());
-	        case 3:
-	        	mRenderer.setRotation(Rotation.ROTATION_270, mRenderer.isFlippedHorizontally(), mRenderer.isFlippedVertically());
-	        default:
-	        	mRenderer.setRotation(Rotation.NORMAL, mRenderer.isFlippedHorizontally(), mRenderer.isFlippedVertically());
-	    }
-        if (mCurrentBitmap != null) {
-            mRenderer.setImageBitmap(mCurrentBitmap, false);
-        }
         requestRender();
     }
 

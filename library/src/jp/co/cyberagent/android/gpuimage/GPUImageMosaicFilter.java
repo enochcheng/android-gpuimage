@@ -18,7 +18,6 @@ package jp.co.cyberagent.android.gpuimage;
 
 
 import android.opengl.GLES20;
-import android.util.Log;
 
 /*
  *  Mosaic Filter... hope i got the ranges right!
