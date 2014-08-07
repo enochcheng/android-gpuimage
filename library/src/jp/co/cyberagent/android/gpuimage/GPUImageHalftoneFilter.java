@@ -54,9 +54,13 @@ public class GPUImageHalftoneFilter extends GPUImageFilter {
     private int dotScalingUniform;
     private int fractionalWidthOfAPixelUniform;
     private int aspectRatioUniform;
+    private float mDot;
+    private float mWidth;
     
     public GPUImageHalftoneFilter() {
         super(NO_FILTER_VERTEX_SHADER, HALFTONE_FRAGMENT_SHADER);
+        mDot = 0.5f;
+        mWidth = 0.05f;
     }
 
     @Override
@@ -67,21 +71,21 @@ public class GPUImageHalftoneFilter extends GPUImageFilter {
         aspectRatioUniform = GLES20.glGetUniformLocation(getProgram(), "aspectRatio");
         dotScalingUniform = GLES20.glGetUniformLocation(getProgram(), "dotScaling");
         
-        setFractionalWidthOfAPixel(0.01f);              
+        setFractionalWidthOfAPixel(mWidth);              
+        setDotScaling(mDot);  
         setAspectRatio(1.0f);
-        setDotScaling(0.01f);
     }
 
     public void setDotScaling(final float dot) {
-    		setFloat(dotScalingUniform, dot);
-    }
+		mDot = dot;
+		setFloat(dotScalingUniform, mDot);    }
     
     public void setAspectRatio(final float ratio) {
 		setFloat(aspectRatioUniform, ratio);
     }
 
 	public void setFractionalWidthOfAPixel(final float fraction) {
-			setFloat(fractionalWidthOfAPixelUniform, fraction); 
-	}
+		mWidth = fraction;	
+		setFloat(fractionalWidthOfAPixelUniform, mWidth); 	}
     
 }
