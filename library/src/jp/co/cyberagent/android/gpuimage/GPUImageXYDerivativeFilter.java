@@ -23,6 +23,7 @@ import android.opengl.GLES20;
  */
 public class GPUImageXYDerivativeFilter extends GPUImageFilterGroup {
     public static final String XY_FRAGMENT_SHADER = "" +
+
     		" precision highp float;\n" + 
     
 		" varying vec2 textureCoordinate;\n" + 
@@ -63,18 +64,23 @@ public class GPUImageXYDerivativeFilter extends GPUImageFilterGroup {
             "}";
 
     public int edgeStrengthUniform;
+    private float mLineSize;
+    private float mEdgeStrength;
     
     public GPUImageXYDerivativeFilter() {
         super();
         addFilter(new GPUImageGrayscaleFilter());
         addFilter(new GPUImage3x3TextureSamplingFilter(XY_FRAGMENT_SHADER));
+        mLineSize = 1.0f;
+        mEdgeStrength = 1.0f;
     }
     
     @Override
     public void onInit() {
         super.onInit();
         edgeStrengthUniform = GLES20.glGetUniformLocation(getProgram(), "edgeStrength");
-        setEdgeStrength(1.0f);
+        setEdgeStrength(mEdgeStrength);
+        setLineSize(mLineSize);
     }
 
     public void setLineSize(final float size) {
