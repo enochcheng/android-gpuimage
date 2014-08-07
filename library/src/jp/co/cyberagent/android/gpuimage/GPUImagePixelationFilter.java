@@ -68,7 +68,7 @@ public class GPUImagePixelationFilter extends GPUImageFilter {
     }
 
     public void setPixel(final float pixel) {
-      mPixel = pixel;
-      setFloat(mPixelLocation, mPixel);
+    		mPixel = pixel;
+    		setFloat(mPixelLocation, mPixel);
     }
 }
