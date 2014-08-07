@@ -56,9 +56,13 @@ public class GPUImagePolkaDotFilter extends GPUImageFilter {
     private int dotScalingUniform;
     private int fractionalWidthOfAPixelUniform;
     private int aspectRatioUniform;
+    private float mDot;
+    private float mWidth;
     
     public GPUImagePolkaDotFilter() {
         super(NO_FILTER_VERTEX_SHADER, POLKA_DOT_FRAGMENT_SHADER);
+        mDot = 0.5f;
+        mWidth = 0.05f;
     }
 
     @Override
@@ -69,14 +73,14 @@ public class GPUImagePolkaDotFilter extends GPUImageFilter {
         fractionalWidthOfAPixelUniform = GLES20.glGetUniformLocation(getProgram(), "fractionalWidthOfPixel");
         aspectRatioUniform = GLES20.glGetUniformLocation(getProgram(), "aspectRatio");
         
-        setFractionalWidthOfAPixel(0.01f);              
+        setFractionalWidthOfAPixel(mWidth);              
+        setDotScaling(mDot);  
         setAspectRatio(1.0f);
-        setDotScaling(0.01f);  
     }
 
     public void setDotScaling(final float scale) {
-    		//float newScale = (float) (Math.pow(scale, 4) / 6);
-    		setFloat(dotScalingUniform, scale);
+    		mDot = scale;
+    		setFloat(dotScalingUniform, mDot);
     }
     
     public void setAspectRatio(final float ratio) {
@@ -84,7 +88,8 @@ public class GPUImagePolkaDotFilter extends GPUImageFilter {
     }
 
     public void setFractionalWidthOfAPixel(final float fraction) {
-    		setFloat(fractionalWidthOfAPixelUniform, fraction); 
+    		mWidth = fraction;	
+    		setFloat(fractionalWidthOfAPixelUniform, mWidth); 
     }
     
 }
