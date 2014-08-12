@@ -108,11 +108,14 @@ public class GPUImageRenderer implements Renderer, PreviewCallback {
             mSurfaceChangedWaiter.notifyAll();
         }
     }
+    
+
 
     @Override
     public void onDrawFrame(final GL10 gl) {
         GLES20.glClear(GLES20.GL_COLOR_BUFFER_BIT | GLES20.GL_DEPTH_BUFFER_BIT);
-        runAll(mRunOnDraw);
+        runAll(mRunOnDraw); // METHOD CALLED AFTER RELEASE BUG 
+        //mFilter.draw
         mFilter.onDraw(mGLTextureId, mGLCubeBuffer, mGLTextureBuffer);
         runAll(mRunOnDrawEnd);
         if (mSurfaceTexture != null) {
@@ -123,7 +126,7 @@ public class GPUImageRenderer implements Renderer, PreviewCallback {
     private void runAll(Queue<Runnable> queue) {
         synchronized (queue) {
             while (!queue.isEmpty()) {
-                queue.poll().run();
+                queue.poll().run(); // METHOD CALLED AFTER RELEASE BUG - Pt2
             }
         }
     }
@@ -161,7 +164,7 @@ public class GPUImageRenderer implements Renderer, PreviewCallback {
                 GLES20.glGenTextures(1, textures, 0);
                 mSurfaceTexture = new SurfaceTexture(textures[0]);
                 try {
-                    camera.setPreviewTexture(mSurfaceTexture);
+                    camera.setPreviewTexture(mSurfaceTexture); // METHOD CALLED AFTER RELEASE BUG - Pt1
                     camera.setPreviewCallback(GPUImageRenderer.this);
                     camera.startPreview();
                 } catch (IOException e) {
@@ -297,8 +300,7 @@ public class GPUImageRenderer implements Renderer, PreviewCallback {
         return coordinate == 0.0f ? distance : 1 - distance;
     }
 
-    public void setRotationCamera(final Rotation rotation, final boolean flipHorizontal,
-            final boolean flipVertical) {
+    public void setRotationCamera(final Rotation rotation, final boolean flipHorizontal, final boolean flipVertical) {
         setRotation(rotation, flipVertical, flipHorizontal);
     }
 

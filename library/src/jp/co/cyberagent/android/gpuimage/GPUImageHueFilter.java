@@ -65,6 +65,7 @@ public class GPUImageHueFilter extends GPUImageFilter {
       "}\n";
 
     private int mHueLocation;
+    private float hueAdjust;
 
     public GPUImageHueFilter() {
         this(90.0f);
@@ -72,16 +73,19 @@ public class GPUImageHueFilter extends GPUImageFilter {
 
     public GPUImageHueFilter(final float hue) {
         super(NO_FILTER_VERTEX_SHADER, HUE_FRAGMENT_SHADER);
+        hueAdjust = hue;
     }
 
     @Override
     public void onInit() {
         super.onInit();
         mHueLocation = GLES20.glGetUniformLocation(getProgram(), "hueAdjust");
+        hueAdjust = 90.0f;
+        setHue(hueAdjust);
     }
 
     public void setHue(final float hue) {
-        float hueAdjust = (hue % 360.0f) * (float) Math.PI / 180.0f;
+        hueAdjust = (hue % 360.0f) * (float) Math.PI / 180.0f;
         setFloat(mHueLocation, hueAdjust);
     }
 }
