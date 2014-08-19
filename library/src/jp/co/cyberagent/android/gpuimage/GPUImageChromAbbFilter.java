@@ -54,9 +54,12 @@ public class GPUImageChromAbbFilter extends GPUImageFilter {
 
     private int XoffsetUniform;
     private int YoffsetUniform;
+    private float xoffset, yoffset;
 
     public GPUImageChromAbbFilter() {
     		super(NO_FILTER_VERTEX_SHADER, CHROMABB_FRAGMENT_SHADER);
+    		xoffset = 0.0f;
+    		yoffset = 0.5f;
     }
 
     @Override
@@ -65,16 +68,18 @@ public class GPUImageChromAbbFilter extends GPUImageFilter {
         XoffsetUniform = GLES20.glGetUniformLocation(getProgram(), "XoffsetValue");
         YoffsetUniform = GLES20.glGetUniformLocation(getProgram(), "YoffsetValue");
 
-        setXoffset(0.0f);
-        setYoffset(0.05f);
+        setXoffset(xoffset);
+        setYoffset(yoffset);
     }
 
 
     public void setXoffset(final float offset) {
-        setFloat(XoffsetUniform, offset);
+    		xoffset = offset;
+        setFloat(XoffsetUniform, xoffset);
     }
     
     public void setYoffset(final float offset) {
-        setFloat(YoffsetUniform, offset);
+		yoffset = offset;
+        setFloat(YoffsetUniform, yoffset);
     }
 }

@@ -78,7 +78,8 @@ public class GPUImageHalftoneFilter extends GPUImageFilter {
 
     public void setDotScaling(final float dot) {
 		mDot = dot;
-		setFloat(dotScalingUniform, mDot);    }
+		setFloat(dotScalingUniform, mDot);    
+	}
     
     public void setAspectRatio(final float ratio) {
 		setFloat(aspectRatioUniform, ratio);
@@ -86,6 +87,7 @@ public class GPUImageHalftoneFilter extends GPUImageFilter {
 
 	public void setFractionalWidthOfAPixel(final float fraction) {
 		mWidth = fraction;	
-		setFloat(fractionalWidthOfAPixelUniform, mWidth); 	}
+		setFloat(fractionalWidthOfAPixelUniform, mWidth); 	
+	}
     
 }
