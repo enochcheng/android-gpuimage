@@ -75,7 +75,7 @@ public class GPUImagePolkaDotFilter extends GPUImageFilter {
         
         setFractionalWidthOfAPixel(mWidth);              
         setDotScaling(mDot);  
-        setAspectRatio(1.0f);
+        setAspectRatio(0.8f);
     }
 
     public void setDotScaling(final float scale) {
