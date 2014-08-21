@@ -81,7 +81,6 @@ public class GPUImageHueFilter extends GPUImageFilter {
     public void onInit() {
         super.onInit();
         mHueLocation = GLES20.glGetUniformLocation(getProgram(), "hueAdjust");
-        hueAdjust = 0.0f;
         setHue(hueAdjust);
     }
 
