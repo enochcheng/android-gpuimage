@@ -16,11 +16,22 @@
 
 package jp.co.cyberagent.android.gpuimage;
 
+import java.util.Arrays;
+
 public class GPUImageTwoPassFilter extends GPUImageFilterGroup {
     public GPUImageTwoPassFilter(String firstVertexShader, String firstFragmentShader,
                                  String secondVertexShader, String secondFragmentShader) {
         super(null);
-        addFilter(new GPUImageFilter(firstVertexShader, firstFragmentShader));
-        addFilter(new GPUImageFilter(secondVertexShader, secondFragmentShader));
+        if (firstVertexShader != null && firstFragmentShader != null) {
+            addFilter(new GPUImageFilter(firstVertexShader, firstFragmentShader));
+        }
+        if (secondVertexShader != null && secondFragmentShader != null) {
+            addFilter(new GPUImageFilter(secondVertexShader, secondFragmentShader));
+        }
+    }
+    
+    protected void setShaders(String firstVertexShader, String firstFragmentShader,
+            String secondVertexShader, String secondFragmentShader) {
+        setFilters(Arrays.asList(new GPUImageFilter[]{new GPUImageFilter(firstVertexShader, firstFragmentShader), new GPUImageFilter(secondVertexShader, secondFragmentShader)}));
     }
 }
