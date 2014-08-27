@@ -17,6 +17,7 @@
 package jp.co.cyberagent.android.gpuimage;
 
 import android.annotation.SuppressLint;
+import android.graphics.Point;
 import android.opengl.GLES20;
 import jp.co.cyberagent.android.gpuimage.util.TextureRotationUtil;
 
@@ -88,6 +89,15 @@ public class GPUImageFilterGroup extends GPUImageFilter {
         mFilters.add(aFilter);
         updateMergedFilters();
     }
+    
+    public void setFilters(List<GPUImageFilter> filters) {
+        
+        mFilters.clear();
+        if (filters != null) {
+            mFilters.addAll(filters);
+        }
+        updateMergedFilters();
+    }
 
     /*
      * (non-Javadoc)
@@ -99,6 +109,7 @@ public class GPUImageFilterGroup extends GPUImageFilter {
         for (GPUImageFilter filter : mFilters) {
             filter.init();
         }
+        updateMergedFilters();
     }
 
     /*
@@ -183,6 +194,11 @@ public class GPUImageFilterGroup extends GPUImageFilter {
     public void onDraw(final int textureId, final FloatBuffer cubeBuffer,
                        final FloatBuffer textureBuffer) {
         runPendingOnDrawTasks();
+        for (GPUImageFilter filter : mFilters) {
+            if (filter instanceof GPUImageFilterGroup) {
+                ((GPUImageFilterGroup) filter).runPendingOnDrawTasks();
+            }
+        }
         if (!isInitialized() || mFrameBuffers == null || mFrameBufferTextures == null) {
             return;
         }
@@ -248,6 +264,17 @@ public class GPUImageFilterGroup extends GPUImageFilter {
                 continue;
             }
             mMergedFilters.add(filter);
+        }
+    }
+    
+    @Override
+    public void setInputSize(int width, int height, Point temp) {
+        temp.set(width, height);
+        Point temp2 = new Point();
+        for (GPUImageFilter filter : mMergedFilters) {
+            filter.setInputSize(width, height, temp2);
+            temp.x = Math.min(temp.x, temp2.x);
+            temp.y = Math.min(temp.y, temp2.y);
         }
     }
 }

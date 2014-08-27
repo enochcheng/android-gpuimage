@@ -25,6 +25,7 @@ import android.graphics.Bitmap;
 import android.graphics.Bitmap.CompressFormat;
 import android.graphics.BitmapFactory;
 import android.graphics.Matrix;
+import android.graphics.Point;
 import android.hardware.Camera;
 import android.media.ExifInterface;
 import android.media.MediaScannerConnection;
@@ -280,13 +281,11 @@ public class GPUImage {
         GPUImageRenderer renderer = new GPUImageRenderer(mFilter);
         renderer.setRotation(Rotation.NORMAL, mRenderer.isFlippedHorizontally(), mRenderer.isFlippedVertically());
         renderer.setScaleType(mScaleType);
-        PixelBuffer buffer = new PixelBuffer(bitmap.getWidth(), bitmap.getHeight());
-        buffer.setRenderer(renderer);
         renderer.setImageBitmap(bitmap, false);
-        Bitmap result = buffer.getBitmap();
+        Bitmap result = renderer.getRenderedBitmap();
         mFilter.destroy();
         renderer.deleteImage();
-        buffer.destroy();
+        renderer.deleteBuffer();
 
         mRenderer.setFilter(mFilter);
         if (mCurrentBitmap != null) {
@@ -296,7 +295,29 @@ public class GPUImage {
 
         return result;
     }
-
+    
+    public Bitmap getBitmapWithFilterApplied(final Bitmap bitmap , 
+            final GPUImageFilter filter,
+            final ScaleType scaleType,
+            final Rotation rotation) {
+        mFilter = filter;
+        mScaleType = scaleType;
+        mRenderer.deleteImage();
+        mCurrentBitmap = null;
+        return getBitmapWithFilterApplied(bitmap);
+    }
+    
+    private static Point inputSize(final Bitmap bitmap, final List<GPUImageFilter> filters) {
+        Point result = new Point(bitmap.getWidth(), bitmap.getHeight());
+        Point temp = new Point();
+        for (GPUImageFilter filter : filters) {
+            filter.setInputSize(bitmap.getWidth(), bitmap.getHeight(), temp);
+            result.x = Math.min(result.x, temp.x);
+            result.y = Math.min(result.y, temp.y);
+        }
+        return result;
+    }
+    
     /**
      * Gets the images for multiple filters on a image. This can be used to
      * quickly get thumbnail images for filters. <br />
@@ -315,16 +336,15 @@ public class GPUImage {
         }
         GPUImageRenderer renderer = new GPUImageRenderer(filters.get(0));
         renderer.setImageBitmap(bitmap, false);
-        PixelBuffer buffer = new PixelBuffer(bitmap.getWidth(), bitmap.getHeight());
-        buffer.setRenderer(renderer);
+        renderer.forceInputSize(inputSize(bitmap, filters));
 
         for (GPUImageFilter filter : filters) {
             renderer.setFilter(filter);
-            listener.response(buffer.getBitmap());
+            listener.response(renderer.getRenderedBitmap());
             filter.destroy();
         }
         renderer.deleteImage();
-        buffer.destroy();
+        renderer.deleteBuffer();
     }
 
     /**

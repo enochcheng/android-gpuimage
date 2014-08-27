@@ -16,20 +16,22 @@
 
 package jp.co.cyberagent.android.gpuimage;
 
+import android.annotation.SuppressLint;
 import android.annotation.TargetApi;
 import android.graphics.Bitmap;
 import android.graphics.Canvas;
+import android.graphics.Point;
 import android.graphics.SurfaceTexture;
 import android.hardware.Camera;
 import android.hardware.Camera.PreviewCallback;
 import android.hardware.Camera.Size;
 import android.opengl.GLES20;
 import android.opengl.GLSurfaceView.Renderer;
-
 import jp.co.cyberagent.android.gpuimage.util.TextureRotationUtil;
 
 import javax.microedition.khronos.egl.EGLConfig;
 import javax.microedition.khronos.opengles.GL10;
+
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
@@ -40,6 +42,7 @@ import java.util.Queue;
 
 import static jp.co.cyberagent.android.gpuimage.util.TextureRotationUtil.TEXTURE_NO_ROTATION;
 
+@SuppressLint("WrongCall")
 @TargetApi(11)
 public class GPUImageRenderer implements Renderer, PreviewCallback {
     public static final int NO_IMAGE = -1;
@@ -51,6 +54,7 @@ public class GPUImageRenderer implements Renderer, PreviewCallback {
     };
 
     private GPUImageFilter mFilter;
+    private PixelBuffer mBuffer;
 
     public final Object mSurfaceChangedWaiter = new Object();
 
@@ -203,6 +207,25 @@ public class GPUImageRenderer implements Renderer, PreviewCallback {
             }
         });
     }
+    
+    public void deleteBuffer() {
+        if (mBuffer != null) {
+            mBuffer.destroy();
+            mBuffer = null;
+        }
+    }
+    
+    
+    private void createBufferFromSize(final int width, final int height)
+    {
+        if (mBuffer == null || (width != mBuffer.mWidth || height != mBuffer.mHeight)) {
+            deleteBuffer();
+            Point inputSize = new Point();
+            mFilter.setInputSize(width, height, inputSize);
+            mBuffer = new PixelBuffer(inputSize.x, inputSize.y);
+            mBuffer.setRenderer(this);
+        }
+    }
 
     public void setImageBitmap(final Bitmap bitmap) {
         setImageBitmap(bitmap, true);
@@ -212,14 +235,18 @@ public class GPUImageRenderer implements Renderer, PreviewCallback {
         if (bitmap == null) {
             return;
         }
+        
+        final int width = bitmap.getWidth();
+        final int height = bitmap.getHeight();
+        createBufferFromSize(width, height);
 
         runOnDraw(new Runnable() {
 
             @Override
             public void run() {
                 Bitmap resizedBitmap = null;
-                if (bitmap.getWidth() % 2 == 1) {
-                    resizedBitmap = Bitmap.createBitmap(bitmap.getWidth() + 1, bitmap.getHeight(),
+                if (width % 2 == 1) {
+                    resizedBitmap = Bitmap.createBitmap(width + 1, height,
                             Bitmap.Config.ARGB_8888);
                     Canvas can = new Canvas(resizedBitmap);
                     can.drawARGB(0x00, 0x00, 0x00, 0x00);
@@ -234,8 +261,8 @@ public class GPUImageRenderer implements Renderer, PreviewCallback {
                 if (resizedBitmap != null) {
                     resizedBitmap.recycle();
                 }
-                mImageWidth = bitmap.getWidth();
-                mImageHeight = bitmap.getHeight();
+                mImageWidth = width;
+                mImageHeight = height;
                 adjustImageScaling();
             }
         });
@@ -251,6 +278,13 @@ public class GPUImageRenderer implements Renderer, PreviewCallback {
 
     protected int getFrameHeight() {
         return mOutputHeight;
+    }
+    
+    public Bitmap getRenderedBitmap() {
+        if (mBuffer != null) {
+            return mBuffer.getBitmap();
+        }
+        return null;
     }
 
     private void adjustImageScaling() {
@@ -337,5 +371,11 @@ public class GPUImageRenderer implements Renderer, PreviewCallback {
         synchronized (mRunOnDrawEnd) {
             mRunOnDrawEnd.add(runnable);
         }
+    }
+
+    public void forceInputSize(Point inputSize) {
+        deleteBuffer();
+        mBuffer = new PixelBuffer(inputSize.x, inputSize.y);
+        mBuffer.setRenderer(this);
     }
 }
