@@ -36,6 +36,7 @@ import static jp.co.cyberagent.android.gpuimage.util.TextureRotationUtil.TEXTURE
  */
 public class GPUImageFilterGroup extends GPUImageFilter {
 
+    protected GPUImageFilterGroup mParentFilter;
     protected List<GPUImageFilter> mFilters;
     protected List<GPUImageFilter> mMergedFilters;
     private int[] mFrameBuffers;
@@ -59,6 +60,7 @@ public class GPUImageFilterGroup extends GPUImageFilter {
      */
     public GPUImageFilterGroup(List<GPUImageFilter> filters) {
         mFilters = filters;
+        mParentFilter = null;
         if (mFilters == null) {
             mFilters = new ArrayList<GPUImageFilter>();
         } else {
@@ -81,22 +83,39 @@ public class GPUImageFilterGroup extends GPUImageFilter {
                 .asFloatBuffer();
         mGLTextureFlipBuffer.put(flipTexture).position(0);
     }
+    
+public void setParentFilter(GPUImageFilterGroup parent) {
+        
+        mParentFilter = parent;
+    }
 
     public void addFilter(GPUImageFilter aFilter) {
         if (aFilter == null) {
             return;
+        }
+        if (aFilter instanceof GPUImageFilterGroup) {
+            ((GPUImageFilterGroup)aFilter).setParentFilter(this);
         }
         mFilters.add(aFilter);
         updateMergedFilters();
     }
     
     public void setFilters(List<GPUImageFilter> filters) {
-        
+        for (GPUImageFilter gpuImageFilter : mFilters) {
+            if (gpuImageFilter instanceof GPUImageFilterGroup) {
+                ((GPUImageFilterGroup)gpuImageFilter).setParentFilter(null);
+            }
+        }
         mFilters.clear();
         if (filters != null) {
+            for (GPUImageFilter gpuImageFilter : filters) {
+                if (gpuImageFilter instanceof GPUImageFilterGroup) {
+                    ((GPUImageFilterGroup)gpuImageFilter).setParentFilter(this);
+                }
+            }
             mFilters.addAll(filters);
         }
-        updateMergedFilters();
+        updateTopParentMergedFilters();
     }
 
     /*
@@ -123,6 +142,17 @@ public class GPUImageFilterGroup extends GPUImageFilter {
             filter.destroy();
         }
         super.onDestroy();
+    }
+    
+    @Override
+    protected void runPendingOnDrawTasks() {
+        super.runPendingOnDrawTasks();
+        for (GPUImageFilter filter : mFilters) {
+            //as it will be merged we need to run them
+            if (filter instanceof GPUImageFilterGroup) {
+                ((GPUImageFilterGroup) filter).runPendingOnDrawTasks();
+            }
+        }
     }
 
     private void destroyFramebuffers() {
@@ -194,11 +224,7 @@ public class GPUImageFilterGroup extends GPUImageFilter {
     public void onDraw(final int textureId, final FloatBuffer cubeBuffer,
                        final FloatBuffer textureBuffer) {
         runPendingOnDrawTasks();
-        for (GPUImageFilter filter : mFilters) {
-            if (filter instanceof GPUImageFilterGroup) {
-                ((GPUImageFilterGroup) filter).runPendingOnDrawTasks();
-            }
-        }
+        
         if (!isInitialized() || mFrameBuffers == null || mFrameBufferTextures == null) {
             return;
         }
@@ -241,6 +267,15 @@ public class GPUImageFilterGroup extends GPUImageFilter {
     public List<GPUImageFilter> getMergedFilters() {
         return mMergedFilters;
     }
+    
+    
+    public void updateTopParentMergedFilters() {
+        if (mParentFilter != null) {
+            mParentFilter.updateTopParentMergedFilters();
+        } else {
+            updateMergedFilters();
+        }
+    }
 
     public void updateMergedFilters() {
         if (mFilters == null) {
@@ -271,7 +306,7 @@ public class GPUImageFilterGroup extends GPUImageFilter {
     public void setInputSize(int width, int height, Point temp) {
         temp.set(width, height);
         Point temp2 = new Point();
-        for (GPUImageFilter filter : mMergedFilters) {
+        for (GPUImageFilter filter : mFilters) {
             filter.setInputSize(width, height, temp2);
             temp.x = Math.min(temp.x, temp2.x);
             temp.y = Math.min(temp.y, temp2.y);

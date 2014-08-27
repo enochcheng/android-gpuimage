@@ -218,10 +218,10 @@ public class GPUImageRenderer implements Renderer, PreviewCallback {
     
     private void createBufferFromSize(final int width, final int height)
     {
-        if (mBuffer == null || (width != mBuffer.mWidth || height != mBuffer.mHeight)) {
+        Point inputSize = new Point();
+        mFilter.setInputSize(width, height, inputSize);
+        if (mBuffer == null || (inputSize.x != mBuffer.mWidth || inputSize.y != mBuffer.mHeight)) {
             deleteBuffer();
-            Point inputSize = new Point();
-            mFilter.setInputSize(width, height, inputSize);
             mBuffer = new PixelBuffer(inputSize.x, inputSize.y);
             mBuffer.setRenderer(this);
         }
