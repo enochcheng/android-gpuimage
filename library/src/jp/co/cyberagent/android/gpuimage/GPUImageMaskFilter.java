@@ -54,6 +54,7 @@ public class GPUImageMaskFilter extends GPUImageTwoInputFilter {
 
 	private int timeUniform;
 	private int thresholdUniform;
+	private float mThreshold;
 	
     public GPUImageMaskFilter() {
         super(MASK_FRAGMENT_SHADER);
@@ -65,6 +66,8 @@ public class GPUImageMaskFilter extends GPUImageTwoInputFilter {
 
         timeUniform = GLES20.glGetUniformLocation(getProgram(), "time");
         thresholdUniform = GLES20.glGetUniformLocation(getProgram(), "threshold");
+        
+        setThreshold(mThreshold);
 
     }
     
@@ -73,7 +76,8 @@ public class GPUImageMaskFilter extends GPUImageTwoInputFilter {
     }
     
     public void setThreshold(float newThreshold) {
-    		setFloat(thresholdUniform, newThreshold);
+    	mThreshold = newThreshold;
+    		setFloat(thresholdUniform, mThreshold);
     }
     
 }

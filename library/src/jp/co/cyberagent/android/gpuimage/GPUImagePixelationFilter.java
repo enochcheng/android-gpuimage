@@ -63,7 +63,7 @@ public class GPUImagePixelationFilter extends GPUImageFilter {
     @Override
     public void onOutputSizeChanged(final int width, final int height) {
         super.onOutputSizeChanged(width, height);
-        setFloat(mImageWidthFactorLocation, .6f / width);
+        setFloat(mImageWidthFactorLocation, .5f / width);
         setFloat(mImageHeightFactorLocation, 1.0f / height);
     }
 

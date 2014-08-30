@@ -92,12 +92,27 @@ public class GPUImageMosaicFilter extends GPUImageTwoInputFilter {
     }
     
     public void setInputTileSize(final float inputTileSize) {
-		float[] sizeArray = {inputTileSize, inputTileSize};
+		float newinputTileSize = inputTileSize;
+    	if (inputTileSize > 1.0) {
+    		newinputTileSize = 1.0f;
+			 }
+			 if (inputTileSize < 0.0) {
+				 newinputTileSize = 0.0f;
+			 }
+    	
+    	float[] sizeArray = {newinputTileSize, newinputTileSize};
 		setFloatVec2(inputTileSizeUniform, sizeArray);
     }
     
     public void setDisplayTileSize(final float displayTileSize) {
-    		float[] sizeArray = {displayTileSize, displayTileSize};
+		float newinputTileSize = displayTileSize;
+    	if (displayTileSize > 1.0) {
+    		newinputTileSize = 1.0f;
+			 }
+			 if (displayTileSize < 0.0) {
+				 newinputTileSize = 0.0f;
+			 }
+    		float[] sizeArray = {newinputTileSize, newinputTileSize};
     		setFloatVec2(displayTileSizeUniform, sizeArray);
     }
     
@@ -110,7 +125,7 @@ public class GPUImageMosaicFilter extends GPUImageTwoInputFilter {
     }
     
     public void setColorOn() {
-    		GLES20.glUniform1i(colorOnUniform, 0);
+    		GLES20.glUniform1i(colorOnUniform, 1);
     }
  
 }

@@ -58,11 +58,13 @@ public class GPUImagePolkaDotFilter extends GPUImageFilter {
     private int aspectRatioUniform;
     private float mDot;
     private float mWidth;
+    private float aspactRatio;
     
     public GPUImagePolkaDotFilter() {
         super(NO_FILTER_VERTEX_SHADER, POLKA_DOT_FRAGMENT_SHADER);
         mDot = 0.5f;
         mWidth = 0.05f;
+        aspactRatio = 0.7f;
     }
 
     @Override
@@ -75,7 +77,7 @@ public class GPUImagePolkaDotFilter extends GPUImageFilter {
         
         setFractionalWidthOfAPixel(mWidth);              
         setDotScaling(mDot);  
-        setAspectRatio(0.8f);
+        setAspectRatio(aspactRatio);
     }
 
     public void setDotScaling(final float scale) {
