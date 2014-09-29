@@ -206,6 +206,21 @@ public class GPUImage {
         mCurrentBitmap = null;
         requestRender();
     }
+    
+    
+    /**
+     * Start recording the current video.
+     */
+    public void startRecording(){
+    	mRenderer.startRecording();
+    }
+    
+    /**
+     * Start recording the current video.
+     */
+    public void finishRecording(){
+    	mRenderer.stopRecording();
+    }
 
     /**
      * Sets the image on which the filter should be applied from a Uri.
