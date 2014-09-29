@@ -16,6 +16,7 @@
 
 package jp.co.cyberagent.android.gpuimage;
 
+import android.annotation.SuppressLint;
 import android.annotation.TargetApi;
 import android.graphics.Bitmap;
 import android.graphics.Canvas;
@@ -40,7 +41,7 @@ import java.util.Queue;
 
 import static jp.co.cyberagent.android.gpuimage.util.TextureRotationUtil.TEXTURE_NO_ROTATION;
 
-@TargetApi(11)
+@SuppressLint("WrongCall") @TargetApi(11)
 public class GPUImageRenderer implements Renderer, PreviewCallback {
     public static final int NO_IMAGE = -1;
     static final float CUBE[] = {
@@ -72,6 +73,10 @@ public class GPUImageRenderer implements Renderer, PreviewCallback {
     private boolean mFlipHorizontal;
     private boolean mFlipVertical;
     private GPUImage.ScaleType mScaleType = GPUImage.ScaleType.CENTER_CROP;
+    
+    private boolean recording;
+    
+    private GPUImageMovieWriter movieWriter;
 
     public GPUImageRenderer(final GPUImageFilter filter) {
         mFilter = filter;
@@ -151,9 +156,26 @@ public class GPUImageRenderer implements Renderer, PreviewCallback {
                         mImageHeight = previewSize.height;
                         adjustImageScaling();
                     }
+                    
+					if(recording && movieWriter != null){
+                    	movieWriter.writeFrame(data);
+                    }
                 }
             });
         }
+    }
+    
+    public void startRecording(){
+    	movieWriter = new GPUImageMovieWriter();
+    	movieWriter.startRecording();
+    	recording = true;
+    }
+    
+    public void stopRecording(){
+    	recording = false;
+    	movieWriter.finishRecording();
+    	movieWriter = null;
+    	
     }
 
     public void setUpSurfaceTexture(final Camera camera) {

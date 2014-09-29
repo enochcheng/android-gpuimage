@@ -16,6 +16,7 @@
 
 package jp.co.cyberagent.android.gpuimage;
 
+import android.annotation.SuppressLint;
 import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.Color;
@@ -214,7 +215,7 @@ public class GPUImageView extends FrameLayout {
      * @return Bitmap of picture with given size
      * @throws InterruptedException
      */
-    public Bitmap capture(final int width, final int height) throws InterruptedException {
+    @SuppressLint("NewApi") public Bitmap capture(final int width, final int height) throws InterruptedException {
         // This method needs to run on a background thread because it will take a longer time
         if (Looper.myLooper() == Looper.getMainLooper()) {
             throw new IllegalStateException("Do not call this method from the UI thread!");
