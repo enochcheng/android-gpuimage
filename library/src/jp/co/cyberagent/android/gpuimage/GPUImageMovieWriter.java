@@ -1,5 +1,6 @@
 package jp.co.cyberagent.android.gpuimage;
 
+import au.notzed.jjmpeg.AVFormatContext;
 import au.notzed.jjmpeg.AVFrame;
 import au.notzed.jjmpeg.exception.AVEncodingError;
 import au.notzed.jjmpeg.exception.AVIOException;
@@ -15,19 +16,17 @@ public class GPUImageMovieWriter {
 	private volatile JJWriterVideo vstream;
 	
 	private boolean isPreviewOn = false;  	
-	  long startTime = 0;
-	   boolean recording = false;
-	    
-	    private int sampleAudioRateInHz = 44100;
-	    private int imageWidth = 320;
-	    private int imageHeight = 240;
-	    private int frameRate = 30;
-	    
-	    private String ffmpeg_link = "/mnt/sdcard/Generate/stream.avi";
-	    
-	    
+	long startTime = 0;
+	boolean recording = false;
+
+	private int sampleAudioRateInHz = 44100;
+	private int imageWidth = 320;
+	private int imageHeight = 240;
+	private int frameRate = 30;
+
+	private String ffmpeg_link = "/mnt/sdcard/Generate/stream.mp4";
+
 	public GPUImageMovieWriter () {
-		
 		initRecorder();
 	}
 	
@@ -77,6 +76,7 @@ public class GPUImageMovieWriter {
     // initialize ffmpeg_recorder
     //---------------------------------------
     private void initRecorder() {
+    		AVFormatContext.registerAll();
     		try {
 				recorder = new JJMediaWriter(ffmpeg_link);
 			} catch (AVInvalidFormatException e) {
