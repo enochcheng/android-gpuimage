@@ -76,7 +76,7 @@ public class GPUImageMovieWriter {
     // initialize ffmpeg_recorder
     //---------------------------------------
     private void initRecorder() {
-    		AVFormatContext.registerAll();
+    		//AVFormatContext.registerAll();
     		try {
 				recorder = new JJMediaWriter(ffmpeg_link);
 			} catch (AVInvalidFormatException e) {
