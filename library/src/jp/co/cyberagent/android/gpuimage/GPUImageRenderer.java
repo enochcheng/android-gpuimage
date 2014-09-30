@@ -158,7 +158,7 @@ public class GPUImageRenderer implements Renderer, PreviewCallback {
                     }
                     
 					if(recording && movieWriter != null){
-                    	movieWriter.writeFrame(data);
+                    		movieWriter.writeFrame(data);
                     }
                 }
             });
@@ -166,16 +166,15 @@ public class GPUImageRenderer implements Renderer, PreviewCallback {
     }
     
     public void startRecording(){
-    	movieWriter = new GPUImageMovieWriter();
-    	movieWriter.startRecording();
-    	recording = true;
+    		movieWriter = new GPUImageMovieWriter();
+    		movieWriter.startRecording();
+    		recording = true;
     }
     
     public void stopRecording(){
-    	recording = false;
-    	movieWriter.finishRecording();
-    	movieWriter = null;
-    	
+    		recording = false;
+    		movieWriter.finishRecording();
+    		movieWriter = null;
     }
 
     public void setUpSurfaceTexture(final Camera camera) {
