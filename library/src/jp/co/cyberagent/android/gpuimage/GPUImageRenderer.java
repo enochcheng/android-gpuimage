@@ -39,324 +39,355 @@ import java.nio.IntBuffer;
 import java.util.LinkedList;
 import java.util.Queue;
 
+import static javax.microedition.khronos.opengles.GL10.GL_RGBA;
+import static javax.microedition.khronos.opengles.GL10.GL_UNSIGNED_BYTE;
 import static jp.co.cyberagent.android.gpuimage.util.TextureRotationUtil.TEXTURE_NO_ROTATION;
 
-@SuppressLint("WrongCall") @TargetApi(11)
+@SuppressLint("WrongCall")
+@TargetApi(11)
 public class GPUImageRenderer implements Renderer, PreviewCallback {
-    public static final int NO_IMAGE = -1;
-    static final float CUBE[] = {
-            -1.0f, -1.0f,
-            1.0f, -1.0f,
-            -1.0f, 1.0f,
-            1.0f, 1.0f,
-    };
 
-    private GPUImageFilter mFilter;
+	public static final int NO_IMAGE = -1;
+	static final float CUBE[] = { -1.0f, -1.0f, 1.0f, -1.0f, -1.0f, 1.0f, 1.0f,
+			1.0f, };
 
-    public final Object mSurfaceChangedWaiter = new Object();
+	private GPUImageFilter mFilter;
 
-    private int mGLTextureId = NO_IMAGE;
-    private SurfaceTexture mSurfaceTexture = null;
-    private final FloatBuffer mGLCubeBuffer;
-    private final FloatBuffer mGLTextureBuffer;
-    private IntBuffer mGLRgbBuffer;
+	public final Object mSurfaceChangedWaiter = new Object();
 
-    private int mOutputWidth;
-    private int mOutputHeight;
-    private int mImageWidth;
-    private int mImageHeight;
-    private int mAddedPadding;
+	private int mGLTextureId = NO_IMAGE;
+	private SurfaceTexture mSurfaceTexture = null;
+	private final FloatBuffer mGLCubeBuffer;
+	private final FloatBuffer mGLTextureBuffer;
+	private IntBuffer mGLRgbBuffer;
 
-    private final Queue<Runnable> mRunOnDraw;
-    private final Queue<Runnable> mRunOnDrawEnd;
-    private Rotation mRotation;
-    private boolean mFlipHorizontal;
-    private boolean mFlipVertical;
-    private GPUImage.ScaleType mScaleType = GPUImage.ScaleType.CENTER_CROP;
-    
-    private boolean recording;
-    
-    private GPUImageMovieWriter movieWriter;
+	private int mOutputWidth;
+	private int mOutputHeight;
+	private int mImageWidth;
+	private int mImageHeight;
+	private int mAddedPadding;
 
-    public GPUImageRenderer(final GPUImageFilter filter) {
-        mFilter = filter;
-        mRunOnDraw = new LinkedList<Runnable>();
-        mRunOnDrawEnd = new LinkedList<Runnable>();
+	private final Queue<Runnable> mRunOnDraw;
+	private final Queue<Runnable> mRunOnDrawEnd;
+	private Rotation mRotation;
+	private boolean mFlipHorizontal;
+	private boolean mFlipVertical;
+	private GPUImage.ScaleType mScaleType = GPUImage.ScaleType.CENTER_CROP;
 
-        mGLCubeBuffer = ByteBuffer.allocateDirect(CUBE.length * 4)
-                .order(ByteOrder.nativeOrder())
-                .asFloatBuffer();
-        mGLCubeBuffer.put(CUBE).position(0);
+	private boolean recording;
 
-        mGLTextureBuffer = ByteBuffer.allocateDirect(TEXTURE_NO_ROTATION.length * 4)
-                .order(ByteOrder.nativeOrder())
-                .asFloatBuffer();
-        setRotation(Rotation.NORMAL, false, false);
-    }
+	private GPUImageMovieWriter movieWriter;
 
-    @Override
-    public void onSurfaceCreated(final GL10 unused, final EGLConfig config) {
-        GLES20.glClearColor(0, 0, 0, 1);
-        GLES20.glDisable(GLES20.GL_DEPTH_TEST);
-        mFilter.init();
-    }
+	public GPUImageRenderer(final GPUImageFilter filter) {
+		mFilter = filter;
+		mRunOnDraw = new LinkedList<Runnable>();
+		mRunOnDrawEnd = new LinkedList<Runnable>();
 
-    @Override
-    public void onSurfaceChanged(final GL10 gl, final int width, final int height) {
-        mOutputWidth = width;
-        mOutputHeight = height;
-        GLES20.glViewport(0, 0, width, height);
-        GLES20.glUseProgram(mFilter.getProgram());
-        mFilter.onOutputSizeChanged(width, height);
-        adjustImageScaling();
-        synchronized (mSurfaceChangedWaiter) {
-            mSurfaceChangedWaiter.notifyAll();
-        }
-    }
-    
+		mGLCubeBuffer = ByteBuffer.allocateDirect(CUBE.length * 4)
+				.order(ByteOrder.nativeOrder()).asFloatBuffer();
+		mGLCubeBuffer.put(CUBE).position(0);
 
+		mGLTextureBuffer = ByteBuffer
+				.allocateDirect(TEXTURE_NO_ROTATION.length * 4)
+				.order(ByteOrder.nativeOrder()).asFloatBuffer();
+		setRotation(Rotation.NORMAL, false, false);
+	}
 
-    @Override
-    public void onDrawFrame(final GL10 gl) {
-        GLES20.glClear(GLES20.GL_COLOR_BUFFER_BIT | GLES20.GL_DEPTH_BUFFER_BIT);
-        runAll(mRunOnDraw); // METHOD CALLED AFTER RELEASE BUG 
-        //mFilter.draw
-        mFilter.onDraw(mGLTextureId, mGLCubeBuffer, mGLTextureBuffer);
-        runAll(mRunOnDrawEnd);
-        if (mSurfaceTexture != null) {
-            mSurfaceTexture.updateTexImage();
-        }
-    }
+	@Override
+	public void onSurfaceCreated(final GL10 unused, final EGLConfig config) {
+		GLES20.glClearColor(0, 0, 0, 1);
+		GLES20.glDisable(GLES20.GL_DEPTH_TEST);
+		mFilter.init();
+	}
 
-    private void runAll(Queue<Runnable> queue) {
-        synchronized (queue) {
-            while (!queue.isEmpty()) {
-                queue.poll().run(); // METHOD CALLED AFTER RELEASE BUG - Pt2
-            }
-        }
-    }
+	@Override
+	public void onSurfaceChanged(final GL10 gl, final int width,
+			final int height) {
+		mOutputWidth = width;
+		mOutputHeight = height;
+		GLES20.glViewport(0, 0, width, height);
+		GLES20.glUseProgram(mFilter.getProgram());
+		mFilter.onOutputSizeChanged(width, height);
+		adjustImageScaling();
+		synchronized (mSurfaceChangedWaiter) {
+			mSurfaceChangedWaiter.notifyAll();
+		}
+	}
 
-    @Override
-    public void onPreviewFrame(final byte[] data, final Camera camera) {
-        final Size previewSize = camera.getParameters().getPreviewSize();
-        if (mGLRgbBuffer == null) {
-            mGLRgbBuffer = IntBuffer.allocate(previewSize.width * previewSize.height);
-        }
-        if (mRunOnDraw.isEmpty()) {
-            runOnDraw(new Runnable() {
-                @Override
-                public void run() {
-                    GPUImageNativeLibrary.YUVtoRBGA(data, previewSize.width, previewSize.height,
-                            mGLRgbBuffer.array());
-                    mGLTextureId = OpenGlUtils.loadTexture(mGLRgbBuffer, previewSize, mGLTextureId);
-                    camera.addCallbackBuffer(data);
+	@Override
+	public void onDrawFrame(final GL10 gl) {
+		GLES20.glClear(GLES20.GL_COLOR_BUFFER_BIT | GLES20.GL_DEPTH_BUFFER_BIT);
+		runAll(mRunOnDraw); // METHOD CALLED AFTER RELEASE BUG
+		// mFilter.draw
+		mFilter.onDraw(mGLTextureId, mGLCubeBuffer, mGLTextureBuffer);
+		runAll(mRunOnDrawEnd);
+		if (mSurfaceTexture != null) {
+			mSurfaceTexture.updateTexImage();
+			
+			if (recording && movieWriter != null) {
+		        int[] iat = new int[(mImageWidth-1) * (mImageHeight-1)];
+		        IntBuffer ib = IntBuffer.allocate((mImageWidth-1) * (mImageHeight-1));
+		        gl.glReadPixels(0, 0, mImageWidth -1, mImageHeight -1, GL10.GL_RGB , GL_UNSIGNED_BYTE, ib);
+		        int[] ia = ib.array();
+		        
+		        // Convert upside down mirror-reversed image to right-side up normal
+		        // image.
+//		        for (int i = 0; i < mImageHeight; i++) {
+//		            for (int j = 0; j < mImageWidth; j++) {
+//		                iat[(mImageHeight - i - 1) * mImageWidth + j] = ia[i * mImageWidth + j];
+//		            }
+//		        }
+		        
+				 java.nio.ByteBuffer bb = java.nio.ByteBuffer.allocate(ia.length * 4);
+				 bb.asIntBuffer().put(ia);
+				 movieWriter.writeFrame(bb.array());
+			}
+		}
+		
+		
 
-                    if (mImageWidth != previewSize.width) {
-                        mImageWidth = previewSize.width;
-                        mImageHeight = previewSize.height;
-                        adjustImageScaling();
-                    }
-                    
-					if(recording && movieWriter != null){
-                    		movieWriter.writeFrame(data);
-                    }
-                }
-            });
-        }
-    }
-    
-    public void startRecording(){
-    		movieWriter = new GPUImageMovieWriter();
-    		movieWriter.startRecording();
-    		recording = true;
-    }
-    
-    public void stopRecording(){
-    		recording = false;
-    		movieWriter.finishRecording();
-    		movieWriter = null;
-    }
+        
 
-    public void setUpSurfaceTexture(final Camera camera) {
-        runOnDraw(new Runnable() {
-            @Override
-            public void run() {
-                int[] textures = new int[1];
-                GLES20.glGenTextures(1, textures, 0);
-                mSurfaceTexture = new SurfaceTexture(textures[0]);
-                try {
-                    camera.setPreviewTexture(mSurfaceTexture); // METHOD CALLED AFTER RELEASE BUG - Pt1
-                    camera.setPreviewCallback(GPUImageRenderer.this);
-                    camera.startPreview();
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
-            }
-        });
-    }
+	}
 
-    public void setFilter(final GPUImageFilter filter) {
-        runOnDraw(new Runnable() {
+	private void runAll(Queue<Runnable> queue) {
+		synchronized (queue) {
+			while (!queue.isEmpty()) {
+				queue.poll().run(); // METHOD CALLED AFTER RELEASE BUG - Pt2
+			}
+		}
+	}
 
-            @Override
-            public void run() {
-                final GPUImageFilter oldFilter = mFilter;
-                mFilter = filter;
-                if (oldFilter != null) {
-                    oldFilter.destroy();
-                }
-                mFilter.init();
-                GLES20.glUseProgram(mFilter.getProgram());
-                mFilter.onOutputSizeChanged(mOutputWidth, mOutputHeight);
-            }
-        });
-    }
+	@Override
+	public void onPreviewFrame(final byte[] data, final Camera camera) {
+		final Size previewSize = camera.getParameters().getPreviewSize();
+		if (mGLRgbBuffer == null) {
+			mGLRgbBuffer = IntBuffer.allocate(previewSize.width
+					* previewSize.height);
+		}
+		if (mRunOnDraw.isEmpty()) {
+			runOnDraw(new Runnable() {
+				@Override
+				public void run() {
+					GPUImageNativeLibrary.YUVtoRBGA(data, previewSize.width,
+							previewSize.height, mGLRgbBuffer.array());
+					mGLTextureId = OpenGlUtils.loadTexture(mGLRgbBuffer,
+							previewSize, mGLTextureId);
+					camera.addCallbackBuffer(data);
 
-    public void deleteImage() {
-        runOnDraw(new Runnable() {
+					if (mImageWidth != previewSize.width) {
+						mImageWidth = previewSize.width;
+						mImageHeight = previewSize.height;
+						adjustImageScaling();
+					}
+					
+//					if (recording && movieWriter != null) {
+//						movieWriter.writeFrame(data);
+//					}
+				}
+			});
+		}
+	}
 
-            @Override
-            public void run() {
-                GLES20.glDeleteTextures(1, new int[]{
-                        mGLTextureId
-                }, 0);
-                mGLTextureId = NO_IMAGE;
-            }
-        });
-    }
+	public void startRecording() {
+		movieWriter = new GPUImageMovieWriter(mImageWidth, mImageHeight);
+		movieWriter.startRecording();
+		recording = true;
+	}
 
-    public void setImageBitmap(final Bitmap bitmap) {
-        setImageBitmap(bitmap, true);
-    }
+	public void stopRecording() {
+		recording = false;
+		movieWriter.finishRecording();
+		movieWriter = null;
 
-    public void setImageBitmap(final Bitmap bitmap, final boolean recycle) {
-        if (bitmap == null) {
-            return;
-        }
+	}
 
-        runOnDraw(new Runnable() {
+	public void setUpSurfaceTexture(final Camera camera) {
+		runOnDraw(new Runnable() {
+			@Override
+			public void run() {
+				int[] textures = new int[1];
+				GLES20.glGenTextures(1, textures, 0);
+				mSurfaceTexture = new SurfaceTexture(textures[0]);
+				try {
+					camera.setPreviewTexture(mSurfaceTexture); // METHOD CALLED
+																// AFTER RELEASE
+																// BUG - Pt1
+					camera.setPreviewCallback(GPUImageRenderer.this);
+					camera.startPreview();
+				} catch (IOException e) {
+					e.printStackTrace();
+				}
+			}
+		});
+	}
 
-            @Override
-            public void run() {
-                Bitmap resizedBitmap = null;
-                if (bitmap.getWidth() % 2 == 1) {
-                    resizedBitmap = Bitmap.createBitmap(bitmap.getWidth() + 1, bitmap.getHeight(),
-                            Bitmap.Config.ARGB_8888);
-                    Canvas can = new Canvas(resizedBitmap);
-                    can.drawARGB(0x00, 0x00, 0x00, 0x00);
-                    can.drawBitmap(bitmap, 0, 0, null);
-                    mAddedPadding = 1;
-                } else {
-                    mAddedPadding = 0;
-                }
+	public void setFilter(final GPUImageFilter filter) {
+		runOnDraw(new Runnable() {
 
-                mGLTextureId = OpenGlUtils.loadTexture(
-                        resizedBitmap != null ? resizedBitmap : bitmap, mGLTextureId, recycle);
-                if (resizedBitmap != null) {
-                    resizedBitmap.recycle();
-                }
-                mImageWidth = bitmap.getWidth();
-                mImageHeight = bitmap.getHeight();
-                adjustImageScaling();
-            }
-        });
-    }
+			@Override
+			public void run() {
+				final GPUImageFilter oldFilter = mFilter;
+				mFilter = filter;
+				if (oldFilter != null) {
+					oldFilter.destroy();
+				}
+				mFilter.init();
+				GLES20.glUseProgram(mFilter.getProgram());
+				mFilter.onOutputSizeChanged(mOutputWidth, mOutputHeight);
+			}
+		});
+	}
 
-    public void setScaleType(GPUImage.ScaleType scaleType) {
-        mScaleType = scaleType;
-    }
+	public void deleteImage() {
+		runOnDraw(new Runnable() {
 
-    protected int getFrameWidth() {
-        return mOutputWidth;
-    }
+			@Override
+			public void run() {
+				GLES20.glDeleteTextures(1, new int[] { mGLTextureId }, 0);
+				mGLTextureId = NO_IMAGE;
+			}
+		});
+	}
 
-    protected int getFrameHeight() {
-        return mOutputHeight;
-    }
+	public void setImageBitmap(final Bitmap bitmap) {
+		setImageBitmap(bitmap, true);
+	}
 
-    private void adjustImageScaling() {
-        float outputWidth = mOutputWidth;
-        float outputHeight = mOutputHeight;
-        if (mRotation == Rotation.ROTATION_270 || mRotation == Rotation.ROTATION_90) {
-            outputWidth = mOutputHeight;
-            outputHeight = mOutputWidth;
-        }
+	public void setImageBitmap(final Bitmap bitmap, final boolean recycle) {
+		if (bitmap == null) {
+			return;
+		}
 
-        float ratio1 = outputWidth / mImageWidth;
-        float ratio2 = outputHeight / mImageHeight;
-        float ratioMax = Math.max(ratio1, ratio2);
-        int imageWidthNew = Math.round(mImageWidth * ratioMax);
-        int imageHeightNew = Math.round(mImageHeight * ratioMax);
+		runOnDraw(new Runnable() {
 
-        float ratioWidth = imageWidthNew / outputWidth;
-        float ratioHeight = imageHeightNew / outputHeight;
+			@Override
+			public void run() {
+				Bitmap resizedBitmap = null;
+				if (bitmap.getWidth() % 2 == 1) {
+					resizedBitmap = Bitmap.createBitmap(bitmap.getWidth() + 1,
+							bitmap.getHeight(), Bitmap.Config.ARGB_8888);
+					Canvas can = new Canvas(resizedBitmap);
+					can.drawARGB(0x00, 0x00, 0x00, 0x00);
+					can.drawBitmap(bitmap, 0, 0, null);
+					mAddedPadding = 1;
+				} else {
+					mAddedPadding = 0;
+				}
 
-        float[] cube = CUBE;
-        float[] textureCords = TextureRotationUtil.getRotation(mRotation, mFlipHorizontal, mFlipVertical);
-        if (mScaleType == GPUImage.ScaleType.CENTER_CROP) {
-            float distHorizontal = (1 - 1 / ratioWidth) / 2;
-            float distVertical = (1 - 1 / ratioHeight) / 2;
-            textureCords = new float[]{
-                    addDistance(textureCords[0], distHorizontal), addDistance(textureCords[1], distVertical),
-                    addDistance(textureCords[2], distHorizontal), addDistance(textureCords[3], distVertical),
-                    addDistance(textureCords[4], distHorizontal), addDistance(textureCords[5], distVertical),
-                    addDistance(textureCords[6], distHorizontal), addDistance(textureCords[7], distVertical),
-            };
-        } else {
-            cube = new float[]{
-                    CUBE[0] / ratioHeight, CUBE[1] / ratioWidth,
-                    CUBE[2] / ratioHeight, CUBE[3] / ratioWidth,
-                    CUBE[4] / ratioHeight, CUBE[5] / ratioWidth,
-                    CUBE[6] / ratioHeight, CUBE[7] / ratioWidth,
-            };
-        }
+				mGLTextureId = OpenGlUtils.loadTexture(
+						resizedBitmap != null ? resizedBitmap : bitmap,
+						mGLTextureId, recycle);
+				if (resizedBitmap != null) {
+					resizedBitmap.recycle();
+				}
+				mImageWidth = bitmap.getWidth();
+				mImageHeight = bitmap.getHeight();
+				adjustImageScaling();
+			}
+		});
+	}
 
-        mGLCubeBuffer.clear();
-        mGLCubeBuffer.put(cube).position(0);
-        mGLTextureBuffer.clear();
-        mGLTextureBuffer.put(textureCords).position(0);
-    }
+	public void setScaleType(GPUImage.ScaleType scaleType) {
+		mScaleType = scaleType;
+	}
 
-    private float addDistance(float coordinate, float distance) {
-        return coordinate == 0.0f ? distance : 1 - distance;
-    }
+	protected int getFrameWidth() {
+		return mOutputWidth;
+	}
 
-    public void setRotationCamera(final Rotation rotation, final boolean flipHorizontal, final boolean flipVertical) {
-        setRotation(rotation, flipVertical, flipHorizontal);
-    }
+	protected int getFrameHeight() {
+		return mOutputHeight;
+	}
 
-    public void setRotation(final Rotation rotation) {
-        mRotation = rotation;
-        adjustImageScaling();
-    }
+	private void adjustImageScaling() {
+		float outputWidth = mOutputWidth;
+		float outputHeight = mOutputHeight;
+		if (mRotation == Rotation.ROTATION_270
+				|| mRotation == Rotation.ROTATION_90) {
+			outputWidth = mOutputHeight;
+			outputHeight = mOutputWidth;
+		}
 
-    public void setRotation(final Rotation rotation, final boolean flipHorizontal, final boolean flipVertical) {
-        mFlipHorizontal = flipHorizontal;
-        mFlipVertical = flipVertical;
-        setRotation(rotation);
-    }
+		float ratio1 = outputWidth / mImageWidth;
+		float ratio2 = outputHeight / mImageHeight;
+		float ratioMax = Math.max(ratio1, ratio2);
+		int imageWidthNew = Math.round(mImageWidth * ratioMax);
+		int imageHeightNew = Math.round(mImageHeight * ratioMax);
 
-    public Rotation getRotation() {
-        return mRotation;
-    }
+		float ratioWidth = imageWidthNew / outputWidth;
+		float ratioHeight = imageHeightNew / outputHeight;
 
-    public boolean isFlippedHorizontally() {
-        return mFlipHorizontal;
-    }
+		float[] cube = CUBE;
+		float[] textureCords = TextureRotationUtil.getRotation(mRotation,
+				mFlipHorizontal, mFlipVertical);
+		if (mScaleType == GPUImage.ScaleType.CENTER_CROP) {
+			float distHorizontal = (1 - 1 / ratioWidth) / 2;
+			float distVertical = (1 - 1 / ratioHeight) / 2;
+			textureCords = new float[] {
+					addDistance(textureCords[0], distHorizontal),
+					addDistance(textureCords[1], distVertical),
+					addDistance(textureCords[2], distHorizontal),
+					addDistance(textureCords[3], distVertical),
+					addDistance(textureCords[4], distHorizontal),
+					addDistance(textureCords[5], distVertical),
+					addDistance(textureCords[6], distHorizontal),
+					addDistance(textureCords[7], distVertical), };
+		} else {
+			cube = new float[] { CUBE[0] / ratioHeight, CUBE[1] / ratioWidth,
+					CUBE[2] / ratioHeight, CUBE[3] / ratioWidth,
+					CUBE[4] / ratioHeight, CUBE[5] / ratioWidth,
+					CUBE[6] / ratioHeight, CUBE[7] / ratioWidth, };
+		}
 
-    public boolean isFlippedVertically() {
-        return mFlipVertical;
-    }
+		mGLCubeBuffer.clear();
+		mGLCubeBuffer.put(cube).position(0);
+		mGLTextureBuffer.clear();
+		mGLTextureBuffer.put(textureCords).position(0);
+	}
 
-    protected void runOnDraw(final Runnable runnable) {
-        synchronized (mRunOnDraw) {
-            mRunOnDraw.add(runnable);
-        }
-    }
+	private float addDistance(float coordinate, float distance) {
+		return coordinate == 0.0f ? distance : 1 - distance;
+	}
 
-    protected void runOnDrawEnd(final Runnable runnable) {
-        synchronized (mRunOnDrawEnd) {
-            mRunOnDrawEnd.add(runnable);
-        }
-    }
+	public void setRotationCamera(final Rotation rotation,
+			final boolean flipHorizontal, final boolean flipVertical) {
+		setRotation(rotation, flipVertical, flipHorizontal);
+	}
+
+	public void setRotation(final Rotation rotation) {
+		mRotation = rotation;
+		adjustImageScaling();
+	}
+
+	public void setRotation(final Rotation rotation,
+			final boolean flipHorizontal, final boolean flipVertical) {
+		mFlipHorizontal = flipHorizontal;
+		mFlipVertical = flipVertical;
+		setRotation(rotation);
+	}
+
+	public Rotation getRotation() {
+		return mRotation;
+	}
+
+	public boolean isFlippedHorizontally() {
+		return mFlipHorizontal;
+	}
+
+	public boolean isFlippedVertically() {
+		return mFlipVertical;
+	}
+
+	protected void runOnDraw(final Runnable runnable) {
+		synchronized (mRunOnDraw) {
+			mRunOnDraw.add(runnable);
+		}
+	}
+
+	protected void runOnDrawEnd(final Runnable runnable) {
+		synchronized (mRunOnDrawEnd) {
+			mRunOnDrawEnd.add(runnable);
+		}
+	}
 }

@@ -1,32 +1,34 @@
 package jp.co.cyberagent.android.gpuimage;
 
-import au.notzed.jjmpeg.AVFormatContext;
-import au.notzed.jjmpeg.AVFrame;
-import au.notzed.jjmpeg.exception.AVEncodingError;
-import au.notzed.jjmpeg.exception.AVIOException;
-import au.notzed.jjmpeg.exception.AVInvalidCodecException;
-import au.notzed.jjmpeg.exception.AVInvalidFormatException;
-import au.notzed.jjmpeg.exception.AVInvalidStreamException;
-import au.notzed.jjmpeg.io.*;
-import au.notzed.jjmpeg.io.JJMediaWriter.JJWriterVideo;
+import org.bytedeco.javacpp.avutil;
+import org.bytedeco.javacpp.swresample;
+import org.bytedeco.javacv.FFmpegFrameRecorder;
+import org.bytedeco.javacv.Frame;
+
+import static org.bytedeco.javacpp.opencv_core.*;
 
 public class GPUImageMovieWriter {
-	
-	private volatile JJMediaWriter recorder;
-	private volatile JJWriterVideo vstream;
-	
-	private boolean isPreviewOn = false;  	
-	long startTime = 0;
-	boolean recording = false;
-
-	private int sampleAudioRateInHz = 44100;
-	private int imageWidth = 320;
-	private int imageHeight = 240;
-	private int frameRate = 30;
-
-	private String ffmpeg_link = "/mnt/sdcard/Generate/stream.mp4";
-
-	public GPUImageMovieWriter () {
+	private volatile FFmpegFrameRecorder recorder;
+	//private volatile FrameRecorder recorder;
+	  private boolean isPreviewOn = false;
+	  	
+	  long startTime = 0;
+	   boolean recording = false;
+	    
+	    
+	    private int sampleAudioRateInHz = 44100;
+	    private int imageWidth = 320;
+	    private int imageHeight = 240;
+	    private int frameRate = 30;
+	    
+	    private String ffmpeg_link = "/mnt/sdcard/Generate/stream.flv";
+	    
+	    private IplImage yuvIplimage = null;
+	    
+	    
+	public GPUImageMovieWriter (int width, int height){
+    	imageWidth = width;
+    	imageHeight = height;
 		initRecorder();
 	}
 	
@@ -52,15 +54,21 @@ public class GPUImageMovieWriter {
             recorder = null;
         }	
 	}
-	
-	public void writeFrame(byte[] data) {
-		AVFrame image = vstream.loadImage(data);
-		try {
-			vstream.addFrame(image);
-		} catch (AVEncodingError e) {
-			e.printStackTrace();
-		} catch (AVIOException e) {
-			e.printStackTrace();
+
+	public void writeFrame(byte[] data){
+		if (yuvIplimage != null && recording) {
+            yuvIplimage.getByteBuffer().put(data);
+        try {
+            long t = 1000 * (System.currentTimeMillis() - startTime);
+            if (t > recorder.getTimestamp()) {
+                recorder.setTimestamp(t);
+            }
+            recorder.record(yuvIplimage);
+            recorder.record();
+            Frame test;
+        } catch (FFmpegFrameRecorder.Exception e) {
+            e.printStackTrace();
+        }
 		}
 	}
 	
@@ -76,16 +84,23 @@ public class GPUImageMovieWriter {
     // initialize ffmpeg_recorder
     //---------------------------------------
     private void initRecorder() {
-    		//AVFormatContext.registerAll();
-    		try {
-				recorder = new JJMediaWriter(ffmpeg_link);
-			} catch (AVInvalidFormatException e) {
-				e.printStackTrace();
-			}
-    		try {
-				vstream = recorder.addVideoStream(imageWidth, imageHeight, 30, 400000);
-			} catch (AVInvalidStreamException e) {
-				e.printStackTrace();
-			}
+
+    	try {
+			Class.forName("org.bytedeco.javacpp.swresample");
+		} catch (ClassNotFoundException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+    	
+        if (yuvIplimage == null) {
+            yuvIplimage = IplImage.create(imageWidth, imageHeight, IPL_DEPTH_8U, 3);
+        }
+        
+    	
+    	recorder = new FFmpegFrameRecorder(ffmpeg_link, imageWidth, imageHeight, 1);
+        recorder.setFormat("flv");
+        recorder.setSampleRate(sampleAudioRateInHz);
+        // Set in the surface changed method
+        recorder.setFrameRate(frameRate);
     }
 }
