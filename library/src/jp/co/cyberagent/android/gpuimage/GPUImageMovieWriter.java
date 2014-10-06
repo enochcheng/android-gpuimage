@@ -1,9 +1,11 @@
 package jp.co.cyberagent.android.gpuimage;
 
-import org.bytedeco.javacpp.Loader;
+
 import org.bytedeco.javacpp.avutil;
 import org.bytedeco.javacpp.swresample;
 import org.bytedeco.javacv.FFmpegFrameRecorder;
+import org.bytedeco.javacv.Frame;
+
 import static org.bytedeco.javacpp.opencv_core.*;
 
 public class GPUImageMovieWriter {
@@ -25,8 +27,9 @@ public class GPUImageMovieWriter {
 	    private IplImage yuvIplimage = null;
 	    
 	    
-	public GPUImageMovieWriter (){
-		
+	public GPUImageMovieWriter (int width, int height){
+    	imageWidth = width;
+    	imageHeight = height;
 		initRecorder();
 	}
 	
@@ -65,6 +68,8 @@ public class GPUImageMovieWriter {
                 recorder.setTimestamp(t);
             }
             recorder.record(yuvIplimage);
+            recorder.record();
+            Frame test;
         } catch (FFmpegFrameRecorder.Exception e) {
             e.printStackTrace();
         }
@@ -83,6 +88,19 @@ public class GPUImageMovieWriter {
     // initialize ffmpeg_recorder
     //---------------------------------------
     private void initRecorder() {
+
+    	try {
+			Class.forName("org.bytedeco.javacpp.swresample");
+		} catch (ClassNotFoundException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+    	
+        if (yuvIplimage == null) {
+            yuvIplimage = IplImage.create(imageWidth, imageHeight, IPL_DEPTH_8U, 3);
+        }
+        
+    	
     	recorder = new FFmpegFrameRecorder(ffmpeg_link, imageWidth, imageHeight, 1);
         recorder.setFormat("flv");
         recorder.setSampleRate(sampleAudioRateInHz);

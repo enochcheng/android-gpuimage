@@ -4,6 +4,10 @@
 	<classpathentry exported="true" kind="con" path="com.android.ide.eclipse.adt.LIBRARIES"/>
 	<classpathentry kind="src" path="src"/>
 	<classpathentry kind="src" path="gen"/>
+	<classpathentry exported="true" kind="lib" path="libs/ffmpeg.jar"/>
+	<classpathentry exported="true" kind="lib" path="libs/javacpp.jar"/>
+	<classpathentry exported="true" kind="lib" path="libs/javacv.jar"/>
+	<classpathentry exported="true" kind="lib" path="libs/opencv.jar"/>
 	<classpathentry exported="true" kind="con" path="com.android.ide.eclipse.adt.DEPENDENCIES"/>
 	<classpathentry kind="output" path="bin/classes"/>
 </classpath>
