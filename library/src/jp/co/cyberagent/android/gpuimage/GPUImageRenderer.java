@@ -124,17 +124,17 @@ public class GPUImageRenderer implements Renderer, PreviewCallback {
 		if (mSurfaceTexture != null) {
 			mSurfaceTexture.updateTexImage();
 			
-//			if (recording && movieWriter != null) {
-//		        //int[] iat = new int[(mImageWidth) * (mImageHeight)];
-//		        IntBuffer ib = IntBuffer.allocate((mImageWidth) * (mImageHeight));
-//		        gl.glReadPixels(0, 0, mImageWidth, mImageHeight, GL10.GL_RGBA , GL_UNSIGNED_BYTE, ib);
-//		        int[] ia = ib.array();
-//		        
-//				java.nio.ByteBuffer bb = java.nio.ByteBuffer.allocate(ia.length * 4);
-//				bb.asIntBuffer().put(ia);
-//
-//				movieWriter.writeFrame(bb.array());
-//			}
+			if (recording && movieWriter != null) {
+		        //int[] iat = new int[(mImageWidth) * (mImageHeight)];
+		        IntBuffer ib = IntBuffer.allocate((mImageWidth) * (mImageHeight));
+		        gl.glReadPixels(0, 0, mImageWidth, mImageHeight, GL10.GL_RGBA , GL_UNSIGNED_BYTE, ib);
+		        int[] ia = ib.array();
+		        
+				java.nio.ByteBuffer bb = java.nio.ByteBuffer.allocate(ia.length * 4);
+				bb.asIntBuffer().put(ia);
+
+				movieWriter.writeFrame(bb.array());
+			}
 		}
 	}
 
@@ -169,9 +169,9 @@ public class GPUImageRenderer implements Renderer, PreviewCallback {
 						adjustImageScaling();
 					}
 					
-					if (recording && movieWriter != null) {
-						movieWriter.writeFrame(data);
-					}
+//					if (recording && movieWriter != null) {
+//						movieWriter.writeFrame(data);
+//					}
 				}
 			});
 		}
