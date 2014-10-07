@@ -26,6 +26,7 @@ import android.hardware.Camera.PreviewCallback;
 import android.hardware.Camera.Size;
 import android.opengl.GLES20;
 import android.opengl.GLSurfaceView.Renderer;
+import android.util.Log;
 
 import jp.co.cyberagent.android.gpuimage.util.TextureRotationUtil;
 
@@ -125,22 +126,16 @@ public class GPUImageRenderer implements Renderer, PreviewCallback {
 			mSurfaceTexture.updateTexImage();
 			
 			if (recording && movieWriter != null) {
-		        int[] iat = new int[(mImageWidth-1) * (mImageHeight-1)];
-		        IntBuffer ib = IntBuffer.allocate((mImageWidth-1) * (mImageHeight-1));
-		        gl.glReadPixels(0, 0, mImageWidth -1, mImageHeight -1, GL10.GL_RGB , GL_UNSIGNED_BYTE, ib);
+		        //int[] iat = new int[(mImageWidth) * (mImageHeight)];
+		        IntBuffer ib = IntBuffer.allocate((mImageWidth) * (mImageHeight));
 		        int[] ia = ib.array();
-		        
-		        // Convert upside down mirror-reversed image to right-side up normal
-		        // image.
-//		        for (int i = 0; i < mImageHeight; i++) {
-//		            for (int j = 0; j < mImageWidth; j++) {
-//		                iat[(mImageHeight - i - 1) * mImageWidth + j] = ia[i * mImageWidth + j];
-//		            }
-//		        }
-		        
-				 java.nio.ByteBuffer bb = java.nio.ByteBuffer.allocate(ia.length * 4);
-				 bb.asIntBuffer().put(ia);
-				 movieWriter.writeFrame(bb.array());
+
+		        Log.d("TAG", "ByteBuffer Length" + ia.length);
+				java.nio.ByteBuffer bb = java.nio.ByteBuffer.allocate(ia.length * 4);
+				bb.asIntBuffer().put(ia);
+			    gl.glReadPixels(0, 0, mImageWidth, mImageHeight, GL10.GL_RGBA , GL_UNSIGNED_BYTE, bb);
+
+				movieWriter.writeFrame(bb.array());
 			}
 		}
 		
