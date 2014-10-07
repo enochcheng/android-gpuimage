@@ -18,8 +18,8 @@ public class GPUImageMovieWriter {
 	    
 	    
 	    private int sampleAudioRateInHz = 44100;
-	    private int imageWidth = 320;
-	    private int imageHeight = 240;
+	    private int imageWidth = 1000;
+	    private int imageHeight = 1000;
 	    private int frameRate = 30;
 	    
 	    private String ffmpeg_link = "/mnt/sdcard/Generate/stream.flv";
@@ -97,8 +97,7 @@ public class GPUImageMovieWriter {
 		}
     	
         if (yuvIplimage == null) {
-            yuvIplimage = IplImage.create(imageWidth, imageHeight, IPL_DEPTH_8U, 4);
-            
+            yuvIplimage = IplImage.create(imageWidth, imageHeight, IPL_DEPTH_8U,2);
         }
         
     	recorder = new FFmpegFrameRecorder(ffmpeg_link, imageWidth, imageHeight, 1);

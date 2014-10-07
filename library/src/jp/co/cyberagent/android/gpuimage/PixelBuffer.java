@@ -202,7 +202,6 @@ public class PixelBuffer {
             }
         }
         
-
         mBitmap = Bitmap.createBitmap(mWidth, mHeight, Bitmap.Config.ARGB_8888);
         mBitmap.copyPixelsFromBuffer(IntBuffer.wrap(iat));
     }
