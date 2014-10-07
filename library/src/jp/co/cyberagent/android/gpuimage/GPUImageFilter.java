@@ -136,7 +136,6 @@ public class GPUImageFilter {
             try {
 				mRunOnDraw.take().run();
 			} catch (InterruptedException e) {
-				// TODO Auto-generated catch block
 				e.printStackTrace();
 			}
         }
@@ -262,7 +261,6 @@ public class GPUImageFilter {
             try {
 				mRunOnDraw.put(runnable);
 			} catch (InterruptedException e) {
-				// TODO Auto-generated catch block
 				e.printStackTrace();
 			}
         }

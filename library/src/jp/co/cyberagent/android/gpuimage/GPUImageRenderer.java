@@ -127,21 +127,15 @@ public class GPUImageRenderer implements Renderer, PreviewCallback {
 			if (recording && movieWriter != null) {
 		        //int[] iat = new int[(mImageWidth) * (mImageHeight)];
 		        IntBuffer ib = IntBuffer.allocate((mImageWidth) * (mImageHeight));
+		        gl.glReadPixels(0, 0, mImageWidth, mImageHeight, GL10.GL_RGBA , GL_UNSIGNED_BYTE, ib);
 		        int[] ia = ib.array();
-
-		        Log.d("TAG", "ByteBuffer Length" + ia.length);
+		        
 				java.nio.ByteBuffer bb = java.nio.ByteBuffer.allocate(ia.length * 4);
 				bb.asIntBuffer().put(ia);
-			    gl.glReadPixels(0, 0, mImageWidth, mImageHeight, GL10.GL_RGBA , GL_UNSIGNED_BYTE, bb);
 
 				movieWriter.writeFrame(bb.array());
 			}
 		}
-		
-		
-
-        
-
 	}
 
 	private void runAll(Queue<Runnable> queue) {

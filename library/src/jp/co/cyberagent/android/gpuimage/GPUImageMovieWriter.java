@@ -6,8 +6,6 @@ import org.bytedeco.javacpp.swresample;
 import org.bytedeco.javacv.FFmpegFrameRecorder;
 import org.bytedeco.javacv.Frame;
 
-import android.util.Log;
-
 import static org.bytedeco.javacpp.opencv_core.*;
 
 public class GPUImageMovieWriter {
@@ -71,6 +69,7 @@ public class GPUImageMovieWriter {
             }
             recorder.record(yuvIplimage);
             recorder.record();
+            Frame test;
         } catch (FFmpegFrameRecorder.Exception e) {
             e.printStackTrace();
         }
@@ -98,10 +97,9 @@ public class GPUImageMovieWriter {
 		}
     	
         if (yuvIplimage == null) {
-            yuvIplimage = IplImage.create(imageWidth, imageHeight, IPL_DEPTH_8U, 3);
+            yuvIplimage = IplImage.create(imageWidth, imageHeight, IPL_DEPTH_8U, 4);
         }
         
-    	
     	recorder = new FFmpegFrameRecorder(ffmpeg_link, imageWidth, imageHeight, 1);
         recorder.setFormat("flv");
         recorder.setSampleRate(sampleAudioRateInHz);
