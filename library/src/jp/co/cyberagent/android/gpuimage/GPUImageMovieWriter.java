@@ -98,6 +98,7 @@ public class GPUImageMovieWriter {
     	
         if (yuvIplimage == null) {
             yuvIplimage = IplImage.create(imageWidth, imageHeight, IPL_DEPTH_8U, 4);
+            
         }
         
     	recorder = new FFmpegFrameRecorder(ffmpeg_link, imageWidth, imageHeight, 1);
