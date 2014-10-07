@@ -125,13 +125,17 @@ public class GPUImageRenderer implements Renderer, PreviewCallback {
 		if (mSurfaceTexture != null) {
 			mSurfaceTexture.updateTexImage();
 			
-			if (recording && movieWriter != null) {
-				IntBuffer ib = IntBuffer.allocate((mImageWidth) * (mImageHeight));
-	            gl.glReadPixels(0, 0, mImageWidth, mImageHeight, GL10.GL_RGB , GL_UNSIGNED_BYTE, ib);
-	            int[] ia = ib.array();
-	            byte[] ba = colorconvertRGB_IYUV_I420(ia, mImageWidth, mImageHeight);
-	            movieWriter.writeFrame(ba);
-			}
+//			if (recording && movieWriter != null) {
+//		        //int[] iat = new int[(mImageWidth) * (mImageHeight)];
+//		        IntBuffer ib = IntBuffer.allocate((mImageWidth) * (mImageHeight));
+//		        gl.glReadPixels(0, 0, mImageWidth, mImageHeight, GL10.GL_RGBA , GL_UNSIGNED_BYTE, ib);
+//		        int[] ia = ib.array();
+//		        
+//				java.nio.ByteBuffer bb = java.nio.ByteBuffer.allocate(ia.length * 4);
+//				bb.asIntBuffer().put(ia);
+//
+//				movieWriter.writeFrame(bb.array());
+//			}
 		}
 		
 		
@@ -171,9 +175,9 @@ public class GPUImageRenderer implements Renderer, PreviewCallback {
 						adjustImageScaling();
 					}
 					
-//					if (recording && movieWriter != null) {
-//						movieWriter.writeFrame(data);
-//					}
+					if (recording && movieWriter != null) {
+						movieWriter.writeFrame(data);
+					}
 				}
 			});
 		}
@@ -380,41 +384,4 @@ public class GPUImageRenderer implements Renderer, PreviewCallback {
 			mRunOnDrawEnd.add(runnable);
 		}
 	}
-	
-	public static byte[] colorconvertRGB_IYUV_I420(int[] aRGB, int width, int height) {
-        final int frameSize = width * height;
-        final int chromasize = frameSize / 4;
-       
-        int yIndex = 0;
-        int uIndex = frameSize;
-        int vIndex = frameSize + chromasize;
-        byte [] yuv = new byte[width*height*3/2];
-       
-        int a, R, G, B, Y, U, V;
-        int index = 0;
-        for (int j = 0; j < height; j++) {
-            for (int i = 0; i < width; i++) {
-
-                //a = (aRGB[index] & 0xff000000) >> 24; //not using it right now
-                R = (aRGB[index] & 0xff0000) >> 16;
-                G = (aRGB[index] & 0xff00) >> 8;
-                B = (aRGB[index] & 0xff) >> 0;
-
-                Y = ((66 * R + 129 * G +  25 * B + 128) >> 8) +  16;
-                U = (( -38 * R -  74 * G + 112 * B + 128) >> 8) + 128;
-                V = (( 112 * R -  94 * G -  18 * B + 128) >> 8) + 128;
-
-                yuv[yIndex++] = (byte) ((Y < 0) ? 0 : ((Y > 255) ? 255 : Y));
-               
-                if (j % 2 == 0 && index % 2 == 0)
-                {
-                    yuv[uIndex++] = (byte)((U < 0) ? 0 : ((U > 255) ? 255 : U));
-                    yuv[vIndex++] = (byte)((V < 0) ? 0 : ((V > 255) ? 255 : V));
-                }
-
-                index ++;
-            }
-        }       
-        return yuv;
-    } 
 }
