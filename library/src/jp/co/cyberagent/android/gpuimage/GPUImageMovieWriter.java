@@ -66,7 +66,6 @@ public class GPUImageMovieWriter {
                 recorder.setTimestamp(t);
             }
             recorder.record(yuvIplimage);
-            recorder.record();
         } catch (FFmpegFrameRecorder.Exception e) {
             e.printStackTrace();
         }
@@ -94,14 +93,11 @@ public class GPUImageMovieWriter {
 		}
     	
         if (yuvIplimage == null) {
-            yuvIplimage = IplImage.create(imageWidth, imageHeight, IPL_DEPTH_8U,2);
+            yuvIplimage = IplImage.create(imageWidth, imageHeight, IPL_DEPTH_8U,4);
         }
-        
-    	
     	recorder = new FFmpegFrameRecorder(ffmpeg_link, imageWidth, imageHeight, 1);
         recorder.setFormat("flv");
         recorder.setSampleRate(sampleAudioRateInHz);
-        // Set in the surface changed method
         recorder.setFrameRate(frameRate);
     }
 }
