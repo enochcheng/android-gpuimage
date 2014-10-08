@@ -74,6 +74,8 @@ public class GPUImageRenderer implements Renderer, PreviewCallback {
 	private boolean mFlipHorizontal;
 	private boolean mFlipVertical;
 	private GPUImage.ScaleType mScaleType = GPUImage.ScaleType.CENTER_CROP;
+	
+	private ByteBuffer bb;
 
 	private boolean recording;
 
@@ -118,29 +120,19 @@ public class GPUImageRenderer implements Renderer, PreviewCallback {
 	@Override
 	public void onDrawFrame(final GL10 gl) {
 		GLES20.glClear(GLES20.GL_COLOR_BUFFER_BIT | GLES20.GL_DEPTH_BUFFER_BIT);
+
 		runAll(mRunOnDraw); // METHOD CALLED AFTER RELEASE BUG
 		// mFilter.draw
+
 		mFilter.onDraw(mGLTextureId, mGLCubeBuffer, mGLTextureBuffer);
-		runAll(mRunOnDrawEnd);
+		
 		if (mSurfaceTexture != null) {
 			mSurfaceTexture.updateTexImage();
-			
-			if (recording && movieWriter != null) {
-		        //int[] iat = new int[(mImageWidth) * (mImageHeight)];
-		        IntBuffer ib = IntBuffer.allocate((mImageWidth) * (mImageHeight));
-		        gl.glReadPixels(0, 0, mImageWidth, mImageHeight, GL10.GL_RGBA , GL_UNSIGNED_BYTE, ib);
-		        int[] ia = ib.array();
-		        
-				java.nio.ByteBuffer bb = java.nio.ByteBuffer.allocate(ia.length * 4);
-				bb.asIntBuffer().put(ia);
-
-				movieWriter.writeFrame(bb.array());
-			}
 		}
-		
-		
-
-        
+		if (recording && movieWriter != null) {        
+			writeVideoFrame(gl);
+		}		
+		runAll(mRunOnDrawEnd);
 
 	}
 
@@ -175,9 +167,6 @@ public class GPUImageRenderer implements Renderer, PreviewCallback {
 						adjustImageScaling();
 					}
 					
-//					if (recording && movieWriter != null) {
-//						movieWriter.writeFrame(data);
-//					}
 				}
 			});
 		}
@@ -185,6 +174,7 @@ public class GPUImageRenderer implements Renderer, PreviewCallback {
 
 	public void startRecording() {
 		movieWriter = new GPUImageMovieWriter(mImageWidth, mImageHeight);
+		bb = ByteBuffer.allocate((mImageWidth) * (mImageHeight) * 4);
 		movieWriter.startRecording();
 		recording = true;
 	}
@@ -231,6 +221,17 @@ public class GPUImageRenderer implements Renderer, PreviewCallback {
 				mFilter.onOutputSizeChanged(mOutputWidth, mOutputHeight);
 			}
 		});
+	}
+	
+	public void writeVideoFrame(final GL10 gl){
+		runOnDrawEnd(new Runnable() {
+			@Override
+			public void run() {
+				gl.glReadPixels(0, 0, mImageWidth, mImageHeight, GL10.GL_RGBA , GL_UNSIGNED_BYTE, bb);
+		        movieWriter.writeFrame(bb.array());
+			}
+		});
+
 	}
 
 	public void deleteImage() {

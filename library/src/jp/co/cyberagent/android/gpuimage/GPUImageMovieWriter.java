@@ -11,7 +11,6 @@ import static org.bytedeco.javacpp.opencv_core.*;
 
 public class GPUImageMovieWriter {
 	private volatile FFmpegFrameRecorder recorder;
-	//private volatile FrameRecorder recorder;
 	  private boolean isPreviewOn = false;
 	  	
 	  long startTime = 0;
@@ -49,12 +48,11 @@ public class GPUImageMovieWriter {
 	}
 	
 	public void finishRecording(){
-
         if (recorder != null && recording) {
             recording = false;
             recorder.close();
             recorder = null;
-        }	
+        }
 	}
 
 	public void writeFrame(byte[] data){
