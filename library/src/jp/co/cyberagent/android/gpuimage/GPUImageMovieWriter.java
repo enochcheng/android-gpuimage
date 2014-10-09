@@ -35,23 +35,27 @@ public class GPUImageMovieWriter {
 	
 	public void startRecording(){
         startTime = System.currentTimeMillis();
-		try {
-			recorder.open();
-		} catch (AVInvalidFormatException e) {
-			e.printStackTrace();
-		} catch (AVInvalidCodecException e) {
-			e.printStackTrace();
-		} catch (AVIOException e) {
-			e.printStackTrace();
-		}
+        try {
+            recorder.start();
+            startTime = System.currentTimeMillis();
+            recording = true;
+        } catch (FFmpegFrameRecorder.Exception e) {
+            e.printStackTrace();
+        }
          recording = true;
 	}
 	
 	public void finishRecording(){
         if (recorder != null && recording) {
             recording = false;
-            recorder.close();
+            try {
+                recorder.stop();
+                recorder.release();
+            } catch (FFmpegFrameRecorder.Exception e) {
+                e.printStackTrace();
+            }
             recorder = null;
+            recording = false;
         }
 	}
 
