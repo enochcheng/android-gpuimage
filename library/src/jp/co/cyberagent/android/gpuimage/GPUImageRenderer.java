@@ -47,7 +47,6 @@ import static jp.co.cyberagent.android.gpuimage.util.TextureRotationUtil.TEXTURE
 @SuppressLint("WrongCall")
 @TargetApi(11)
 public class GPUImageRenderer implements Renderer, PreviewCallback {
-
 	public static final int NO_IMAGE = -1;
 	static final float CUBE[] = { -1.0f, -1.0f, 1.0f, -1.0f, -1.0f, 1.0f, 1.0f,
 			1.0f, };
@@ -132,6 +131,7 @@ public class GPUImageRenderer implements Renderer, PreviewCallback {
 		if (recording && movieWriter != null) {        
 			writeVideoFrame(gl);
 		}		
+
 		runAll(mRunOnDrawEnd);
 
 	}
