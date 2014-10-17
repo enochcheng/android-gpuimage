@@ -60,4 +60,14 @@ public class GPUImageTwoPassTextureSamplingFilter extends GPUImageTwoPassFilter 
     public float getHorizontalTexelOffsetRatio() {
         return 1f;
     }
+
+	public void setVerticalTexelSpacing() {
+		// TODO Auto-generated method stub
+		
+	}
+
+	public void setHorizontalTexelSpacing(float f) {
+		// TODO Auto-generated method stub
+		
+	}
 }
