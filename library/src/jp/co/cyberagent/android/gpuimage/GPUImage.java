@@ -194,8 +194,8 @@ public class GPUImage {
      *
      * @param rotation new rotation
      */
-    public void setRotation(Rotation rotation) {
-        mRenderer.setRotation(rotation);
+    public void setRotation(Rotation rotation, boolean flipHorizontally, boolean flipVertically) {
+        mRenderer.setRotation(rotation, flipHorizontally, flipVertically);
     }
 
     /**
