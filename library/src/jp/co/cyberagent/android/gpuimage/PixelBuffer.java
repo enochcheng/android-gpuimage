@@ -188,20 +188,30 @@ public class PixelBuffer {
                 attribute, value) ? value[0] : 0;
     }
 
-    private void convertToBitmap() {
+    private void convertToBitmap0() {
+        int[] iat = new int[mWidth * mHeight];
         IntBuffer ib = IntBuffer.allocate(mWidth * mHeight);
-        IntBuffer ibt = IntBuffer.allocate(mWidth * mHeight);
         mGL.glReadPixels(0, 0, mWidth, mHeight, GL_RGBA, GL_UNSIGNED_BYTE, ib);
+        int[] ia = ib.array();
 
         // Convert upside down mirror-reversed image to right-side up normal
         // image.
         for (int i = 0; i < mHeight; i++) {
             for (int j = 0; j < mWidth; j++) {
-                ibt.put((mHeight - i - 1) * mWidth + j, ib.get(i * mWidth + j));
+                iat[(mHeight - i - 1) * mWidth + j] = ia[i * mWidth + j];
             }
         }
 
         mBitmap = Bitmap.createBitmap(mWidth, mHeight, Bitmap.Config.ARGB_8888);
-        mBitmap.copyPixelsFromBuffer(ibt);
+        mBitmap.copyPixelsFromBuffer(IntBuffer.wrap(iat));
+    }
+
+    private void convertToBitmap() {
+        IntBuffer ib = IntBuffer.allocate(mWidth);
+        mBitmap = Bitmap.createBitmap(mWidth, mHeight, Bitmap.Config.ARGB_8888);
+        for (int i = 0; i < mHeight; i++) {
+            mGL.glReadPixels(0, i, mWidth, 1, GL_RGBA, GL_UNSIGNED_BYTE, ib);
+            mBitmap.setPixels(ib.array(), 0, mWidth, 0, mHeight - 1 - i, mWidth, 1);
+        }
     }
 }
