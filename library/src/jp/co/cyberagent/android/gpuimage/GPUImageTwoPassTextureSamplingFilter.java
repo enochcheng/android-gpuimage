@@ -17,6 +17,7 @@
 package jp.co.cyberagent.android.gpuimage;
 
 import android.opengl.GLES20;
+import android.util.Log;
 
 public class GPUImageTwoPassTextureSamplingFilter extends GPUImageTwoPassFilter {
     public GPUImageTwoPassTextureSamplingFilter(String firstVertexShader, String firstFragmentShader,
@@ -25,27 +26,57 @@ public class GPUImageTwoPassTextureSamplingFilter extends GPUImageTwoPassFilter 
                 secondVertexShader, secondFragmentShader);
     }
 
+    int texelWidthOffsetLocationFilterOne;
+    int texelHeightOffsetLocationFilterOne;
+    int texelWidthOffsetLocationFilterTwo;
+    int texelHeightOffsetLocationFilterTwo;
+    GPUImageFilter filterOne, filterTwo;
+    float ratio;
+    Boolean initialized = false;
+    
     @Override
     public void onInit() {
         super.onInit();
+        
+        filterOne = mFilters.get(0);
+        filterTwo = mFilters.get(1);
+        
+        texelWidthOffsetLocationFilterOne  = GLES20.glGetUniformLocation(filterOne.getProgram(), "texelWidthOffset");
+        texelHeightOffsetLocationFilterOne = GLES20.glGetUniformLocation(filterOne.getProgram(), "texelHeightOffset");
+        
+        texelWidthOffsetLocationFilterTwo  = GLES20.glGetUniformLocation(filterTwo.getProgram(), "texelWidthOffset");
+        texelHeightOffsetLocationFilterTwo = GLES20.glGetUniformLocation(filterTwo.getProgram(), "texelHeightOffset");
+        
+        initialized = true;
         initTexelOffsets();
     }
 
     protected void initTexelOffsets() {
-        float ratio = getHorizontalTexelOffsetRatio();
-        GPUImageFilter filter = mFilters.get(0);
-        int texelWidthOffsetLocation = GLES20.glGetUniformLocation(filter.getProgram(), "texelWidthOffset");
-        int texelHeightOffsetLocation = GLES20.glGetUniformLocation(filter.getProgram(), "texelHeightOffset");
-        filter.setFloat(texelWidthOffsetLocation, ratio / mOutputWidth);
-        filter.setFloat(texelHeightOffsetLocation, 0);
+        filterOne.setFloat(texelWidthOffsetLocationFilterOne, getHorizontalTexelOffsetRatio() / mOutputWidth);
+        filterOne.setFloat(texelHeightOffsetLocationFilterOne, 0);
 
-        ratio = getVerticalTexelOffsetRatio();
-        filter = mFilters.get(1);
-        texelWidthOffsetLocation = GLES20.glGetUniformLocation(filter.getProgram(), "texelWidthOffset");
-        texelHeightOffsetLocation = GLES20.glGetUniformLocation(filter.getProgram(), "texelHeightOffset");
-        filter.setFloat(texelWidthOffsetLocation, 0);
-        filter.setFloat(texelHeightOffsetLocation, ratio / mOutputHeight);
+        filterTwo.setFloat(texelWidthOffsetLocationFilterTwo, 0);
+        filterTwo.setFloat(texelHeightOffsetLocationFilterTwo, getVerticalTexelOffsetRatio() / mOutputHeight);
     }
+    
+    protected void updateHorizontalTexelOffsets(float f) {
+    		if(initialized) {
+        		Log.d("GENERATE", "Horizontal");
+
+    			filterOne.setFloat(texelWidthOffsetLocationFilterOne, f / mOutputWidth);
+        		filterOne.setFloat(texelHeightOffsetLocationFilterOne, 0);
+    		}
+    }
+    
+    protected void updateVerticalTexelOffsets(float f) {
+    		if(initialized) {
+        		Log.d("GENERATE", "Vertical");
+
+    			filterTwo.setFloat(texelWidthOffsetLocationFilterTwo, 0);
+        		filterTwo.setFloat(texelHeightOffsetLocationFilterTwo, f / mOutputHeight);
+    		}
+    }
+
 
     @Override
     public void onOutputSizeChanged(int width, int height) {
@@ -60,4 +91,12 @@ public class GPUImageTwoPassTextureSamplingFilter extends GPUImageTwoPassFilter 
     public float getHorizontalTexelOffsetRatio() {
         return 1f;
     }
+
+	public void setVerticalTexelSpacing(float f) {
+		updateVerticalTexelOffsets(f);
+	}
+
+	public void setHorizontalTexelSpacing(float f) {
+		updateHorizontalTexelOffsets(f);
+	}
 }

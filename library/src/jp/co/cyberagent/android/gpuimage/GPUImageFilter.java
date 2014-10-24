@@ -24,6 +24,8 @@ import android.opengl.GLES20;
 import java.io.InputStream;
 import java.nio.FloatBuffer;
 import java.util.LinkedList;
+import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.LinkedBlockingQueue;
 
 public class GPUImageFilter {
     public static final String NO_FILTER_VERTEX_SHADER = "" +
@@ -47,7 +49,7 @@ public class GPUImageFilter {
             "     gl_FragColor = texture2D(inputImageTexture, textureCoordinate);\n" +
             "}";
 
-    private final LinkedList<Runnable> mRunOnDraw;
+    private final BlockingQueue<Runnable> mRunOnDraw;
     private final String mVertexShader;
     private final String mFragmentShader;
     protected int mGLProgId;
@@ -63,7 +65,7 @@ public class GPUImageFilter {
     }
 
     public GPUImageFilter(final String vertexShader, final String fragmentShader) {
-        mRunOnDraw = new LinkedList<Runnable>();
+        mRunOnDraw = new LinkedBlockingQueue<Runnable>();
         mVertexShader = vertexShader;
         mFragmentShader = fragmentShader;
     }
@@ -78,8 +80,7 @@ public class GPUImageFilter {
         mGLProgId = OpenGlUtils.loadProgram(mVertexShader, mFragmentShader);
         mGLAttribPosition = GLES20.glGetAttribLocation(mGLProgId, "position");
         mGLUniformTexture = GLES20.glGetUniformLocation(mGLProgId, "inputImageTexture");
-        mGLAttribTextureCoordinate = GLES20.glGetAttribLocation(mGLProgId,
-                "inputTextureCoordinate");
+        mGLAttribTextureCoordinate = GLES20.glGetAttribLocation(mGLProgId, "inputTextureCoordinate");
         mIsInitialized = true;
     }
 
@@ -103,7 +104,7 @@ public class GPUImageFilter {
     public void onDraw(final int textureId, final FloatBuffer cubeBuffer,
                        final FloatBuffer textureBuffer) {
         GLES20.glUseProgram(mGLProgId);
-        runPendingOnDrawTasks();
+        runPendingOnDrawTasks(); // LinkedList Error
         if (!mIsInitialized) {
             return;
         }
@@ -129,9 +130,14 @@ public class GPUImageFilter {
 
     protected void onDrawArraysPre() {}
 
+    //here 's a solution I dont understand http://stackoverflow.com/questions/17705658/nosuchelementexception-even-after-check
     protected void runPendingOnDrawTasks() {
         while (!mRunOnDraw.isEmpty()) {
-            mRunOnDraw.removeFirst().run();
+            try {
+				mRunOnDraw.take().run();
+			} catch (InterruptedException e) {
+				e.printStackTrace();
+			}
         }
     }
 
@@ -252,7 +258,11 @@ public class GPUImageFilter {
 
     protected void runOnDraw(final Runnable runnable) {
         synchronized (mRunOnDraw) {
-            mRunOnDraw.addLast(runnable);
+            try {
+				mRunOnDraw.put(runnable);
+			} catch (InterruptedException e) {
+				e.printStackTrace();
+			}
         }
     }
 

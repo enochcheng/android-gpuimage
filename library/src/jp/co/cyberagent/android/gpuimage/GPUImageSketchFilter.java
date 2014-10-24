@@ -16,9 +16,6 @@
 
 package jp.co.cyberagent.android.gpuimage;
 
-import java.util.ArrayList;
-import java.util.List;
-
 /**
  * Converts video to look like a sketch.
  * This is just the Sobel edge detection filter with the colors inverted.
@@ -63,5 +60,9 @@ public class GPUImageSketchFilter extends GPUImageFilterGroup {
         super();
         addFilter(new GPUImageGrayscaleFilter());
         addFilter(new GPUImage3x3TextureSamplingFilter(SKETCH_FRAGMENT_SHADER));
+    }
+    
+    public void setLineSize(final float size) {
+        ((GPUImage3x3TextureSamplingFilter) getFilters().get(1)).setLineSize(size);
     }
 }
