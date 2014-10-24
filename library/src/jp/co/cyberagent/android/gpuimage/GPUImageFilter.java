@@ -18,6 +18,7 @@ package jp.co.cyberagent.android.gpuimage;
 
 import android.content.Context;
 import android.content.res.AssetManager;
+import android.graphics.Point;
 import android.graphics.PointF;
 import android.opengl.GLES20;
 
@@ -48,8 +49,9 @@ public class GPUImageFilter {
             "}";
 
     private final LinkedList<Runnable> mRunOnDraw;
-    private final String mVertexShader;
-    private final String mFragmentShader;
+    private final LinkedList<Runnable> mRunPreOnDraw;
+    private String mVertexShader;
+    private String mFragmentShader;
     protected int mGLProgId;
     protected int mGLAttribPosition;
     protected int mGLUniformTexture;
@@ -64,23 +66,38 @@ public class GPUImageFilter {
 
     public GPUImageFilter(final String vertexShader, final String fragmentShader) {
         mRunOnDraw = new LinkedList<Runnable>();
+        mRunPreOnDraw = new LinkedList<Runnable>();
         mVertexShader = vertexShader;
         mFragmentShader = fragmentShader;
     }
 
     public final void init() {
         onInit();
-        mIsInitialized = true;
         onInitialized();
     }
 
     public void onInit() {
-        mGLProgId = OpenGlUtils.loadProgram(mVertexShader, mFragmentShader);
-        mGLAttribPosition = GLES20.glGetAttribLocation(mGLProgId, "position");
-        mGLUniformTexture = GLES20.glGetUniformLocation(mGLProgId, "inputImageTexture");
-        mGLAttribTextureCoordinate = GLES20.glGetAttribLocation(mGLProgId,
-                "inputTextureCoordinate");
-        mIsInitialized = true;
+        if (mVertexShader != null && mFragmentShader != null) {
+            mGLProgId = OpenGlUtils.loadProgram(mVertexShader, mFragmentShader);
+            mGLAttribPosition = GLES20.glGetAttribLocation(mGLProgId, "position");
+            mGLUniformTexture = GLES20.glGetUniformLocation(mGLProgId, "inputImageTexture");
+            mGLAttribTextureCoordinate = GLES20.glGetAttribLocation(mGLProgId, "inputTextureCoordinate");
+            mIsInitialized = true;
+        }
+    }
+    
+    protected void setShaders(final String vertexShader, final String fragmentShader) {
+        mVertexShader = vertexShader;
+        mFragmentShader = fragmentShader;
+        if (mIsInitialized) {
+            destroy();
+            mGLProgId = OpenGlUtils.loadProgram(mVertexShader, mFragmentShader);
+            mGLAttribPosition = GLES20.glGetAttribLocation(mGLProgId, "position");
+            mGLUniformTexture = GLES20.glGetUniformLocation(mGLProgId, "inputImageTexture");
+            mGLAttribTextureCoordinate = GLES20.glGetAttribLocation(mGLProgId, "inputTextureCoordinate");
+            mIsInitialized = true;
+            onInitialized();
+        }
     }
 
     public void onInitialized() {
@@ -102,8 +119,9 @@ public class GPUImageFilter {
 
     public void onDraw(final int textureId, final FloatBuffer cubeBuffer,
                        final FloatBuffer textureBuffer) {
+        runPendingPreOnDrawTasks(); // LinkedList Error
         GLES20.glUseProgram(mGLProgId);
-        runPendingOnDrawTasks();
+        runPendingOnDrawTasks(); // LinkedList Error
         if (!mIsInitialized) {
             return;
         }
@@ -131,7 +149,13 @@ public class GPUImageFilter {
 
     protected void runPendingOnDrawTasks() {
         while (!mRunOnDraw.isEmpty()) {
-            mRunOnDraw.removeFirst().run();
+            mRunOnDraw.removeFirst().run(); // CRASHY CRASHY
+        }
+    }
+    
+    protected void runPendingPreOnDrawTasks() {
+        while (!mRunPreOnDraw.isEmpty()) {
+            mRunPreOnDraw.removeFirst().run(); // CRASHY CRASHY
         }
     }
 
@@ -255,6 +279,12 @@ public class GPUImageFilter {
             mRunOnDraw.addLast(runnable);
         }
     }
+    
+    protected void runPreOnDraw(final Runnable runnable) {
+        synchronized (mRunPreOnDraw) {
+            mRunPreOnDraw.addLast(runnable);
+        }
+    }
 
     public static String loadShader(String file, Context context) {
         try {
@@ -274,5 +304,10 @@ public class GPUImageFilter {
     public static String convertStreamToString(java.io.InputStream is) {
         java.util.Scanner s = new java.util.Scanner(is).useDelimiter("\\A");
         return s.hasNext() ? s.next() : "";
+    }
+
+    public void setInputSize(int width, int height, Point temp) {
+        //no downscale by default
+        temp.set(width, height);
     }
 }

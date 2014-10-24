@@ -100,6 +100,10 @@ public class GPUImageBoxBlurFilter extends GPUImageTwoPassTextureSamplingFilter 
             }
         });
     }
+    
+    public float getBlurSize() {
+        return blurSize;
+    }
 
     @Override
     public float getVerticalTexelOffsetRatio() {

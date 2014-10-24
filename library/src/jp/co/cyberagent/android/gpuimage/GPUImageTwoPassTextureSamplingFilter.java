@@ -19,6 +19,7 @@ package jp.co.cyberagent.android.gpuimage;
 import android.opengl.GLES20;
 
 public class GPUImageTwoPassTextureSamplingFilter extends GPUImageTwoPassFilter {
+    private boolean needsInitOffsetsOnDraw = true;
     public GPUImageTwoPassTextureSamplingFilter(String firstVertexShader, String firstFragmentShader,
                                                 String secondVertexShader, String secondFragmentShader) {
         super(firstVertexShader, firstFragmentShader,
@@ -28,10 +29,23 @@ public class GPUImageTwoPassTextureSamplingFilter extends GPUImageTwoPassFilter 
     @Override
     public void onInit() {
         super.onInit();
-        initTexelOffsets();
+        runInitTexelOffsetsOnDrawIfNecessary();
+    }
+    
+    protected void runInitTexelOffsetsOnDrawIfNecessary() {
+        if (needsInitOffsetsOnDraw) {
+            needsInitOffsetsOnDraw = false;
+            runOnDraw(new Runnable() {
+                @Override
+                public void run() {
+                    initTexelOffsets();
+                }
+            });
+        }
     }
 
     protected void initTexelOffsets() {
+        needsInitOffsetsOnDraw = true;
         float ratio = getHorizontalTexelOffsetRatio();
         GPUImageFilter filter = mFilters.get(0);
         int texelWidthOffsetLocation = GLES20.glGetUniformLocation(filter.getProgram(), "texelWidthOffset");
@@ -50,7 +64,7 @@ public class GPUImageTwoPassTextureSamplingFilter extends GPUImageTwoPassFilter 
     @Override
     public void onOutputSizeChanged(int width, int height) {
         super.onOutputSizeChanged(width, height);
-        initTexelOffsets();
+        runInitTexelOffsetsOnDrawIfNecessary();
     }
 
     public float getVerticalTexelOffsetRatio() {

@@ -25,6 +25,7 @@ import android.graphics.Bitmap;
 import android.graphics.Bitmap.CompressFormat;
 import android.graphics.BitmapFactory;
 import android.graphics.Matrix;
+import android.graphics.Point;
 import android.hardware.Camera;
 import android.media.ExifInterface;
 import android.media.MediaScannerConnection;
@@ -41,7 +42,6 @@ import android.view.WindowManager;
 import java.io.*;
 import java.net.URL;
 import java.util.List;
-import java.util.concurrent.Semaphore;
 
 /**
  * The main accessor for GPUImage functionality. This class helps to do common
@@ -123,13 +123,14 @@ public class GPUImage {
      * @param flipHorizontal if the image should be flipped horizontally
      * @param flipVertical if the image should be flipped vertically
      */
-    public void setUpCamera(final Camera camera, final int degrees, final boolean flipHorizontal,
-            final boolean flipVertical) {
+    public void setUpCamera(final Camera camera, final int degrees, final boolean flipHorizontal, final boolean flipVertical) {
         mGlSurfaceView.setRenderMode(GLSurfaceView.RENDERMODE_CONTINUOUSLY);
         if (Build.VERSION.SDK_INT > Build.VERSION_CODES.GINGERBREAD_MR1) {
             setUpCameraGingerbread(camera);
         } else {
-            camera.setPreviewCallback(mRenderer);
+        		//camera.setPreviewTexture(mRenderer);
+        		//camera.setPreviewDisplay(mRenderer);
+        		camera.setPreviewCallback(mRenderer);
             camera.startPreview();
         }
         Rotation rotation = Rotation.NORMAL;
@@ -229,8 +230,7 @@ public class GPUImage {
         String[] projection = {
                 MediaStore.Images.Media.DATA,
         };
-        Cursor cursor = mContext.getContentResolver()
-                .query(uri, projection, null, null, null);
+        Cursor cursor = mContext.getContentResolver().query(uri, projection, null, null, null);
         int pathIndex = cursor.getColumnIndexOrThrow(MediaStore.Images.Media.DATA);
         String path = null;
         if (cursor.moveToFirst()) {
@@ -279,16 +279,13 @@ public class GPUImage {
         }
 
         GPUImageRenderer renderer = new GPUImageRenderer(mFilter);
-        renderer.setRotation(Rotation.NORMAL,
-                mRenderer.isFlippedHorizontally(), mRenderer.isFlippedVertically());
+        renderer.setRotation(Rotation.NORMAL, mRenderer.isFlippedHorizontally(), mRenderer.isFlippedVertically());
         renderer.setScaleType(mScaleType);
-        PixelBuffer buffer = new PixelBuffer(bitmap.getWidth(), bitmap.getHeight());
-        buffer.setRenderer(renderer);
         renderer.setImageBitmap(bitmap, false);
-        Bitmap result = buffer.getBitmap();
+        Bitmap result = renderer.getRenderedBitmap();
         mFilter.destroy();
         renderer.deleteImage();
-        buffer.destroy();
+        renderer.deleteBuffer();
 
         mRenderer.setFilter(mFilter);
         if (mCurrentBitmap != null) {
@@ -298,7 +295,29 @@ public class GPUImage {
 
         return result;
     }
-
+    
+    public Bitmap getBitmapWithFilterApplied(final Bitmap bitmap , 
+            final GPUImageFilter filter,
+            final ScaleType scaleType,
+            final Rotation rotation) {
+        mFilter = filter;
+        mScaleType = scaleType;
+        mRenderer.deleteImage();
+        mCurrentBitmap = null;
+        return getBitmapWithFilterApplied(bitmap);
+    }
+    
+    private static Point inputSize(final Bitmap bitmap, final List<GPUImageFilter> filters) {
+        Point result = new Point(bitmap.getWidth(), bitmap.getHeight());
+        Point temp = new Point();
+        for (GPUImageFilter filter : filters) {
+            filter.setInputSize(bitmap.getWidth(), bitmap.getHeight(), temp);
+            result.x = Math.min(result.x, temp.x);
+            result.y = Math.min(result.y, temp.y);
+        }
+        return result;
+    }
+    
     /**
      * Gets the images for multiple filters on a image. This can be used to
      * quickly get thumbnail images for filters. <br />
@@ -317,16 +336,15 @@ public class GPUImage {
         }
         GPUImageRenderer renderer = new GPUImageRenderer(filters.get(0));
         renderer.setImageBitmap(bitmap, false);
-        PixelBuffer buffer = new PixelBuffer(bitmap.getWidth(), bitmap.getHeight());
-        buffer.setRenderer(renderer);
+        renderer.forceInputSize(inputSize(bitmap, filters));
 
         for (GPUImageFilter filter : filters) {
             renderer.setFilter(filter);
-            listener.response(buffer.getBitmap());
+            listener.response(renderer.getRenderedBitmap());
             filter.destroy();
         }
         renderer.deleteImage();
-        buffer.destroy();
+        renderer.deleteBuffer();
     }
 
     /**
@@ -344,8 +362,7 @@ public class GPUImage {
      * @param listener the listener
      */
     @Deprecated
-    public void saveToPictures(final String folderName, final String fileName,
-            final OnPictureSavedListener listener) {
+    public void saveToPictures(final String folderName, final String fileName, final OnPictureSavedListener listener) {
         saveToPictures(mCurrentBitmap, folderName, fileName, listener);
     }
 
@@ -365,8 +382,7 @@ public class GPUImage {
      * @param listener the listener
      */
     @Deprecated
-    public void saveToPictures(final Bitmap bitmap, final String folderName, final String fileName,
-            final OnPictureSavedListener listener) {
+    public void saveToPictures(final Bitmap bitmap, final String folderName, final String fileName, final OnPictureSavedListener listener) {
         new SaveTask(bitmap, folderName, fileName, listener).execute();
     }
 
@@ -385,10 +401,10 @@ public class GPUImage {
         } else if (mCurrentBitmap != null) {
             return mCurrentBitmap.getWidth();
         } else {
-            WindowManager windowManager =
-                    (WindowManager) mContext.getSystemService(Context.WINDOW_SERVICE);
+            WindowManager windowManager = (WindowManager) mContext.getSystemService(Context.WINDOW_SERVICE);
             Display display = windowManager.getDefaultDisplay();
             return display.getWidth();
+            //return display.getSize(Point pt);
         }
     }
 
@@ -414,8 +430,7 @@ public class GPUImage {
         private final OnPictureSavedListener mListener;
         private final Handler mHandler;
 
-        public SaveTask(final Bitmap bitmap, final String folderName, final String fileName,
-                final OnPictureSavedListener listener) {
+        public SaveTask(final Bitmap bitmap, final String folderName, final String fileName, final OnPictureSavedListener listener) {
             mBitmap = bitmap;
             mFolderName = folderName;
             mFileName = fileName;
@@ -431,12 +446,11 @@ public class GPUImage {
         }
 
         private void saveImage(final String folderName, final String fileName, final Bitmap image) {
-            File path = Environment
-                    .getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES);
+            File path = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES);
             File file = new File(path, folderName + "/" + fileName);
             try {
                 file.getParentFile().mkdirs();
-                image.compress(CompressFormat.JPEG, 80, new FileOutputStream(file));
+                image.compress(CompressFormat.JPEG, 80, new FileOutputStream(file)); // OVERWRITE ?
                 MediaScannerConnection.scanFile(mContext,
                         new String[] {
                             file.toString()
@@ -492,8 +506,7 @@ public class GPUImage {
 
         @Override
         protected int getImageOrientation() throws IOException {
-            Cursor cursor = mContext.getContentResolver().query(mUri,
-                    new String[] { MediaStore.Images.ImageColumns.ORIENTATION }, null, null, null);
+            Cursor cursor = mContext.getContentResolver().query(mUri, new String[] { MediaStore.Images.ImageColumns.ORIENTATION }, null, null, null);
 
             if (cursor == null || cursor.getCount() != 1) {
                 return 0;
@@ -673,8 +686,7 @@ public class GPUImage {
                 if (orientation != 0) {
                     Matrix matrix = new Matrix();
                     matrix.postRotate(orientation);
-                    rotatedBitmap = Bitmap.createBitmap(bitmap, 0, 0, bitmap.getWidth(),
-                            bitmap.getHeight(), matrix, true);
+                    rotatedBitmap = Bitmap.createBitmap(bitmap, 0, 0, bitmap.getWidth(), bitmap.getHeight(), matrix, true);
                     bitmap.recycle();
                 }
             } catch (IOException e) {

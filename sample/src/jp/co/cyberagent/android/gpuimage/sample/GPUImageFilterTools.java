@@ -140,7 +140,7 @@ public class GPUImageFilterTools {
                 sharpness.setSharpness(2.0f);
                 return sharpness;
             case SOBEL_EDGE_DETECTION:
-                return new GPUImageSobelEdgeDetection();
+                return new GPUImageSobelEdgeDetectionFilter();
             case THREE_X_THREE_CONVOLUTION:
                 GPUImage3x3ConvolutionFilter convolution = new GPUImage3x3ConvolutionFilter();
                 convolution.setConvolutionKernel(new float[] {
@@ -335,7 +335,7 @@ public class GPUImageFilterTools {
                 adjuster = new GammaAdjuster().filter(filter);
             } else if (filter instanceof GPUImageBrightnessFilter) {
                 adjuster = new BrightnessAdjuster().filter(filter);
-            } else if (filter instanceof GPUImageSobelEdgeDetection) {
+            } else if (filter instanceof GPUImageSobelEdgeDetectionFilter) {
                 adjuster = new SobelAdjuster().filter(filter);
             } else if (filter instanceof GPUImageEmbossFilter) {
                 adjuster = new EmbossAdjuster().filter(filter);
@@ -469,7 +469,7 @@ public class GPUImageFilterTools {
             }
         }
 
-        private class SobelAdjuster extends Adjuster<GPUImageSobelEdgeDetection> {
+        private class SobelAdjuster extends Adjuster<GPUImageSobelEdgeDetectionFilter> {
             @Override
             public void adjust(final int percentage) {
                 getFilter().setLineSize(range(percentage, 0.0f, 5.0f));

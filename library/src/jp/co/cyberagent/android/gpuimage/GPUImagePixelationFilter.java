@@ -18,7 +18,7 @@ package jp.co.cyberagent.android.gpuimage;
 
 import android.opengl.GLES20;
 /**
- * Applies a grayscale effect to the image.
+ * Applies a pixelation effect to the image.
  */
 public class GPUImagePixelationFilter extends GPUImageFilter {
     public static final String PIXELATION_FRAGMENT_SHADER = "" +
@@ -68,7 +68,7 @@ public class GPUImagePixelationFilter extends GPUImageFilter {
     }
 
     public void setPixel(final float pixel) {
-      mPixel = pixel;
-      setFloat(mPixelLocation, mPixel);
+    		mPixel = pixel;
+    		setFloat(mPixelLocation, mPixel);
     }
 }
