@@ -16,6 +16,7 @@
 
 package jp.co.cyberagent.android.gpuimage;
 
+import android.annotation.SuppressLint;
 import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.Color;
@@ -115,8 +116,8 @@ public class GPUImageView extends FrameLayout {
      *
      * @param rotation new rotation
      */
-    public void setRotation(Rotation rotation) {
-        mGPUImage.setRotation(rotation);
+    public void setRotation(Rotation rotation, boolean flipHorizonal, boolean flipVertical) {
+        mGPUImage.setRotation(rotation, flipHorizonal, flipVertical);
         requestRender();
     }
 
@@ -214,7 +215,7 @@ public class GPUImageView extends FrameLayout {
      * @return Bitmap of picture with given size
      * @throws InterruptedException
      */
-    public Bitmap capture(final int width, final int height) throws InterruptedException {
+    @SuppressLint("NewApi") public Bitmap capture(final int width, final int height) throws InterruptedException {
         // This method needs to run on a background thread because it will take a longer time
         if (Looper.myLooper() == Looper.getMainLooper()) {
             throw new IllegalStateException("Do not call this method from the UI thread!");
@@ -291,17 +292,18 @@ public class GPUImageView extends FrameLayout {
         final int height = mGLSurfaceView.getMeasuredHeight();
 
         // Take picture on OpenGL thread
-        final IntBuffer pixelMirroredBuffer = IntBuffer.allocate(width * height);
+        final int[] pixelMirroredArray = new int[width * height];
         mGPUImage.runOnGLThread(new Runnable() {
             @Override
             public void run() {
                 final IntBuffer pixelBuffer = IntBuffer.allocate(width * height);
                 GLES20.glReadPixels(0, 0, width, height, GLES20.GL_RGBA, GLES20.GL_UNSIGNED_BYTE, pixelBuffer);
+                int[] pixelArray = pixelBuffer.array();
 
                 // Convert upside down mirror-reversed image to right-side up normal image.
                 for (int i = 0; i < height; i++) {
                     for (int j = 0; j < width; j++) {
-                        pixelMirroredBuffer.put((height - i - 1) * width + j, pixelBuffer.get(i * width + j));
+                        pixelMirroredArray[(height - i - 1) * width + j] = pixelArray[i * width + j];
                     }
                 }
                 waiter.release();
@@ -311,7 +313,7 @@ public class GPUImageView extends FrameLayout {
         waiter.acquire();
 
         Bitmap bitmap = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888);
-        bitmap.copyPixelsFromBuffer(pixelMirroredBuffer);
+        bitmap.copyPixelsFromBuffer(IntBuffer.wrap(pixelMirroredArray));
         return bitmap;
     }
 

@@ -109,7 +109,7 @@ public class GPUImageGaussianBlurFilter extends GPUImageTwoPassTextureSamplingFi
         runOnDraw(new Runnable() {
             @Override
             public void run() {
-                initTexelOffsets();
+                initTexelOffsets(); 
             }
         });
     }

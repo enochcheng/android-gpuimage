@@ -271,7 +271,7 @@ public class GPUImageRGBDilationFilter extends GPUImageTwoPassTextureSamplingFil
         super(vertexShader, fragmentShader, vertexShader, fragmentShader);
     }
 
-    private static String getVertexShader(int radius) {
+    public static  String getVertexShader(int radius) {
         switch (radius) {
             case 0:
             case 1:
@@ -285,7 +285,7 @@ public class GPUImageRGBDilationFilter extends GPUImageTwoPassTextureSamplingFil
         }
     }
 
-    private static String getFragmentShader(int radius) {
+    public static  String getFragmentShader(int radius) {
         switch (radius) {
             case 0:
             case 1:
@@ -298,4 +298,12 @@ public class GPUImageRGBDilationFilter extends GPUImageTwoPassTextureSamplingFil
                 return FRAGMENT_SHADER_4;
         }
     }
+
+	public void setVerticalTexelSpacing(float f) {
+		super.setVerticalTexelSpacing(f);
+	}
+
+	public void setHorizontalTexelSpacing(float f) {
+		super.setHorizontalTexelSpacing(f);
+	}
 }

@@ -19,8 +19,7 @@ package jp.co.cyberagent.android.gpuimage;
 import android.opengl.GLES20;
 
 /**
- * Reduces the color range of the image. <br/>
- * <br/>
+ * Reduces the color range of the image. 
  * colorLevels: ranges from 1 to 256, with a default of 10
  */
 public class GPUImagePosterizeFilter extends GPUImageFilter {
